@@ -1,0 +1,2799 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ウェブ文字組エディタ</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link id="default-web-fonts" rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@200..900&family=Noto+Sans+JP:wght@100..900&display=swap">
+    <!-- file:// でも Chrome が読み込める。JS 側ではこのCSSを保存用にも利用する。 -->
+    <link id="template-sweet-type-css" rel="stylesheet" href="template/sweet-type.css">
+    <!-- file:// でCSS本文の参照まで拒否された場合の、保存用バックアップ。
+         template/sweet-type.css を更新したときは、この内容も同期する。 -->
+    <template id="embedded-template-sweet-type-css">
+/* SweetType の組版設定。sweet-type.html からこの変数を書き換えて使用する。 */
+:root {
+    --sweet-type-base-feature: "halt";
+    --sweet-type-base-variant: normal;
+    --sweet-type-base-halt: 1;
+    --sweet-type-punctuation-manual: 1;
+    --sweet-type-auto-tsume: 1;
+    --sweet-type-spacing-trim: space-all;
+
+    /* 本文コンテナの共通指定。data-sweet-type を付けるだけで適用される。 */
+    --sweet-type-font-family: inherit;
+    --sweet-type-font-size: 1rem;
+    --sweet-type-line-height: normal;
+
+    --sweet-type-target: 0.17em;
+    --sweet-type-strength: 0.75;
+    --sweet-type-max: 0.25em;
+    --sweet-type-tracking: 0.025em;
+    --sweet-type-autospace: 0.18em;
+
+    --sweet-type-kanji-font: inherit;
+    --sweet-type-kanji-scale: 1;
+    --sweet-type-kanji-weight: 510;
+    --sweet-type-kanji-spacing: 0em;
+    --sweet-type-hiragana-font: "Hiragino Mincho ProN", "Yu Mincho", serif;
+    --sweet-type-hiragana-scale: 0.81;
+    --sweet-type-hiragana-weight: inherit;
+    --sweet-type-hiragana-spacing: 0.005em;
+    --sweet-type-katakana-font: inherit;
+    --sweet-type-katakana-scale: 1;
+    --sweet-type-katakana-weight: inherit;
+    --sweet-type-katakana-spacing: 0em;
+    --sweet-type-latin-font: inherit;
+    --sweet-type-latin-scale: 1;
+    --sweet-type-latin-weight: inherit;
+    --sweet-type-latin-spacing: 0em;
+    --sweet-type-yakumono-font: inherit;
+    --sweet-type-yakumono-scale: 1;
+    --sweet-type-yakumono-weight: inherit;
+    --sweet-type-yakumono-spacing: 0em;
+
+    /* ベース（本文全体）の太さ。inherit ならページ側の指定（通常 400）をそのまま使う */
+    --sweet-type-base-weight: inherit;
+
+    --sweet-type-open-before: 0.5em;
+    --sweet-type-open-after: 0em;
+    --sweet-type-close-before: 0em;
+    --sweet-type-close-after: 0.5em;
+    --sweet-type-kuten-before: 0em;
+    --sweet-type-kuten-after: 0.5em;
+    --sweet-type-touten-before: 0em;
+    --sweet-type-touten-after: 0.5em;
+    --sweet-type-nakaten-before: 0.25em;
+    --sweet-type-nakaten-after: 0.25em;
+    --sweet-type-bang-before: 0em;
+    --sweet-type-bang-after: 0.5em;
+    --sweet-type-yakumono-pair: 0.5em;
+    --sweet-type-eol-yakumono: 0em;
+}
+
+.sweet-type,
+[data-sweet-type] {
+    text-align: justify;
+    line-break: strict;
+    font-family: var(--sweet-type-font-family);
+    font-size: var(--sweet-type-font-size);
+    line-height: var(--sweet-type-line-height);
+    font-feature-settings: var(--sweet-type-base-feature);
+    font-variant-east-asian: var(--sweet-type-base-variant);
+    text-spacing-trim: var(--sweet-type-spacing-trim);
+    text-autospace: no-autospace;
+    font-weight: var(--sweet-type-base-weight);
+}
+
+[data-sweet-type-span] {
+    --sweet-type-char-spacing: 0em;
+    display: inline;
+    margin-right: var(--sweet-type-char-spacing);
+}
+
+.sweet-type__kanji {
+    font-family: var(--sweet-type-kanji-font);
+    font-size: calc(1em * var(--sweet-type-kanji-scale));
+    font-weight: var(--sweet-type-kanji-weight);
+    --sweet-type-char-spacing: var(--sweet-type-kanji-spacing);
+    line-height: 0;
+}
+
+.sweet-type__hiragana {
+    font-family: var(--sweet-type-hiragana-font);
+    font-size: calc(1em * var(--sweet-type-hiragana-scale));
+    font-weight: var(--sweet-type-hiragana-weight);
+    --sweet-type-char-spacing: var(--sweet-type-hiragana-spacing);
+    line-height: 0;
+}
+
+.sweet-type__katakana,
+.sweet-type__kana-half,
+.sweet-type__choon,
+.sweet-type__repeat {
+    font-family: var(--sweet-type-katakana-font);
+    font-size: calc(1em * var(--sweet-type-katakana-scale));
+    font-weight: var(--sweet-type-katakana-weight);
+    --sweet-type-char-spacing: var(--sweet-type-katakana-spacing);
+    line-height: 0;
+}
+
+.sweet-type__latin,
+.sweet-type__digit,
+.sweet-type__latin-punct,
+.sweet-type__latin-full,
+.sweet-type__digit-full {
+    font-family: var(--sweet-type-latin-font);
+    font-size: calc(1em * var(--sweet-type-latin-scale));
+    font-weight: var(--sweet-type-latin-weight);
+    --sweet-type-char-spacing: var(--sweet-type-latin-spacing);
+    line-height: 0;
+}
+
+/* 約物（括弧・句読点・中点・！？）。--sweet-type-char-spacing はここで設定すれば、
+   下の各 [data-sweet-type-boundary="..."] の margin-right 式にそのまま乗る。 */
+.sweet-type__open,
+.sweet-type__close,
+.sweet-type__kuten,
+.sweet-type__touten,
+.sweet-type__nakaten,
+.sweet-type__yakumono {
+    font-family: var(--sweet-type-yakumono-font);
+    font-size: calc(1em * var(--sweet-type-yakumono-scale));
+    font-weight: var(--sweet-type-yakumono-weight);
+    --sweet-type-char-spacing: var(--sweet-type-yakumono-spacing);
+    line-height: 0;
+}
+
+/* 通常の和文境界。実測した字面間のアキを目標値へ近づける。 */
+[data-sweet-type-span][style*="--sweet-type-g"]:not([data-sweet-type-boundary]) {
+    margin-right: calc(
+        max(calc(var(--sweet-type-target) - var(--sweet-type-g)), calc(-1 * var(--sweet-type-max)))
+        * var(--sweet-type-strength) * var(--sweet-type-auto-tsume)
+        + var(--sweet-type-tracking) + var(--sweet-type-char-spacing)
+    );
+}
+
+/* 和欧間はフォント自身の字幅へ指定量を追加する。 */
+[data-sweet-type-boundary="autospace"] {
+    margin-right: calc(var(--sweet-type-autospace) + var(--sweet-type-char-spacing));
+}
+
+/*
+ * normal: 指定値を最終的なアキとして扱い、実測余白 --sweet-type-g を差し引く。
+ * 字形機能ベース: 指定値を追加補正としてそのまま足す。
+ */
+[data-sweet-type-boundary="open-before"] { margin-right: calc(var(--sweet-type-open-before) - (1 - var(--sweet-type-punctuation-manual)) * var(--sweet-type-g) + var(--sweet-type-char-spacing)); }
+[data-sweet-type-boundary="open-after"] { margin-right: calc(var(--sweet-type-open-after) - (1 - var(--sweet-type-punctuation-manual)) * var(--sweet-type-g) + var(--sweet-type-char-spacing)); }
+[data-sweet-type-boundary="close-before"] { margin-right: calc(var(--sweet-type-close-before) - (1 - var(--sweet-type-punctuation-manual)) * var(--sweet-type-g) + var(--sweet-type-char-spacing)); }
+[data-sweet-type-boundary="close-after"] { margin-right: calc(var(--sweet-type-close-after) - (1 - var(--sweet-type-punctuation-manual)) * var(--sweet-type-g) + var(--sweet-type-char-spacing)); }
+[data-sweet-type-boundary="kuten-before"] { margin-right: calc(var(--sweet-type-kuten-before) - (1 - var(--sweet-type-punctuation-manual)) * var(--sweet-type-g) + var(--sweet-type-char-spacing)); }
+[data-sweet-type-boundary="kuten-after"] { margin-right: calc(var(--sweet-type-kuten-after) - (1 - var(--sweet-type-punctuation-manual)) * var(--sweet-type-g) + var(--sweet-type-char-spacing)); }
+[data-sweet-type-boundary="touten-before"] { margin-right: calc(var(--sweet-type-touten-before) - (1 - var(--sweet-type-punctuation-manual)) * var(--sweet-type-g) + var(--sweet-type-char-spacing)); }
+[data-sweet-type-boundary="touten-after"] { margin-right: calc(var(--sweet-type-touten-after) - (1 - var(--sweet-type-punctuation-manual)) * var(--sweet-type-g) + var(--sweet-type-char-spacing)); }
+[data-sweet-type-boundary="nakaten-before"] { margin-right: calc(var(--sweet-type-nakaten-before) - (1 - var(--sweet-type-punctuation-manual)) * var(--sweet-type-g) + var(--sweet-type-char-spacing)); }
+[data-sweet-type-boundary="nakaten-after"] { margin-right: calc(var(--sweet-type-nakaten-after) - (1 - var(--sweet-type-punctuation-manual)) * var(--sweet-type-g) + var(--sweet-type-char-spacing)); }
+[data-sweet-type-boundary="bang-before"] { margin-right: calc(var(--sweet-type-bang-before) - (1 - var(--sweet-type-punctuation-manual)) * var(--sweet-type-g) + var(--sweet-type-char-spacing)); }
+[data-sweet-type-boundary="bang-after"] { margin-right: calc(var(--sweet-type-bang-after) - (1 - var(--sweet-type-punctuation-manual)) * var(--sweet-type-g) + var(--sweet-type-char-spacing)); }
+[data-sweet-type-boundary="pair"] { margin-right: calc(var(--sweet-type-yakumono-pair) - (1 - var(--sweet-type-punctuation-manual)) * var(--sweet-type-g) + var(--sweet-type-char-spacing)); }
+
+/* 行末では通常の詰めと文字種別アキを打ち消す。約物だけは行末指定へ揃える。 */
+[data-sweet-type-eol] { margin-right: 0 !important; }
+[data-sweet-type-eol][data-sweet-type-boundary="close-after"],
+[data-sweet-type-eol][data-sweet-type-boundary="kuten-after"],
+[data-sweet-type-eol][data-sweet-type-boundary="touten-after"],
+[data-sweet-type-eol][data-sweet-type-boundary="nakaten-after"],
+[data-sweet-type-eol][data-sweet-type-boundary="bang-after"] {
+    margin-right: calc(var(--sweet-type-eol-yakumono) - (1 - var(--sweet-type-punctuation-manual)) * var(--sweet-type-g)) !important;
+}
+    </template>
+    <!-- file:// でテンプレートJS本文を取得できない場合の、案件コピー用バックアップ。 -->
+    <template id="embedded-template-sweet-type-js">
+/*!
+ * sweet-type.js
+ *
+ * 日本語テキストを文字種ごとに分割し、class 付きの &lt;span&gt; で包むことで
+ * CSS から文字づめを制御できるようにする。
+ *
+ * 役割分担
+ *   約物のアキ（括弧・句読点・中点）  … ブラウザの text-spacing-trim に任せる
+ *   かな詰め・和欧間アキ              … このライブラリが担当する
+ *
+ * text-spacing-trim は行頭の始め括弧・行末の句読点といった「位置に依存する規則」まで
+ * 処理できる。これは CSS クラスでは原理的に書けないので、対応ブラウザでは
+ * 約物に一切手を出さない。非対応ブラウザ向けの近似だけ用意してある。
+ *
+ * かな詰めは canvas の TextMetrics で実フォントのサイドベアリングを実測し、
+ * 隣り合う 2 文字の字面のアキを CSS カスタムプロパティ --sweet-type-g として書き出す。
+ * 実際の詰め量は sweet-type.css 側で計算するので、書体を変えれば自動的に追随し、
+ * 詰め具合は CSS だけで調整できる。
+ *
+ * 使い方:
+ *   &lt;script src="sweet-type.js"&gt;&lt;/script&gt;
+ *   &lt;script&gt;SweetType.apply('.sweet-type');&lt;/script&gt;
+ *
+ *   HTML に data-sweet-type を書けば DOMContentLoaded で自動適用される。
+ */
+(function (global) {
+    'use strict';
+
+    // ------------------------------------------------------------------
+    // 文字種の定義
+    //
+    // 分類は JIS X 4051（日本語文書の組版方法）の文字クラスをおおむね踏襲している。
+    // 判定は上から順に行われるので並び順に意味がある
+    // （「ゝ」は Script=Hiragana でもあるが、先に repeat として拾う）。
+    // ------------------------------------------------------------------
+    var RULES = [
+        ['space-ja', /^　$/u],                                  // 和字間隔
+        ['space', /^\s$/u],                                     // 半角空白・改行
+
+        ['open', /^[‘“（〔［｛〈《「『【〘〖〝‹«｟｢]$/u],          // 始め括弧類
+        ['close', /^[’”）〕］｝〉》」』】〙〗〟›»｠｣]$/u],          // 終わり括弧類
+        ['kuten', /^[。．｡]$/u],                                 // 句点類
+        ['touten', /^[、，､]$/u],                                // 読点類
+        ['nakaten', /^[・：；･]$/u],                             // 中点類
+        ['yakumono', /^[！？‼⁇⁈⁉]$/u],                          // 区切り約物
+        ['hyphen', /^[‐–〜～゠]$/u],                             // ハイフン類
+        ['dash', /^[—―…‥〳〴〵]$/u],                             // 分離禁止文字
+        ['repeat', /^[ゝゞヽヾ々〻]$/u],                          // 繰返し記号
+        ['choon', /^[ーｰ]$/u],                                  // 長音記号
+
+        ['kana-half', /^[ｦ-ﾟ]$/u],                              // 半角カナ
+        ['hiragana', /^\p{Script=Hiragana}$/u],
+        ['katakana', /^\p{Script=Katakana}$/u],
+        ['kanji', /^[\p{Script=Han}〆〇]$/u],
+
+        ['latin-full', /^[Ａ-Ｚａ-ｚ]$/u],
+        ['digit-full', /^[０-９]$/u],
+        ['digit', /^[0-9]$/u],
+        ['latin', /^\p{Script=Latin}$/u],
+        ['latin-punct', /^[!-\/:-@\[-`{-~]$/u],
+
+        ['punct-full', /^[　-〿！-･￠-￦]$/u]                     // その他の全角記号
+    ];
+
+    // 小書きの仮名。hiragana / katakana / kana-half に付加クラスとして足す
+    var SMALL_KANA = /^[ぁぃぅぇぉっゃゅょゎゕゖァィゥェォッャュョヮヵヶㇰ-ㇿｧ-ｯ]$/u;
+
+    var FALLBACK = 'other';
+
+    var TYPES = RULES.map(function (r) { return r[0]; }).concat([FALLBACK, 'small']);
+
+    // 集合。境界ごとの処理の振り分けに使う
+    var setOf = function (list) {
+        var s = Object.create(null);
+        list.forEach(function (k) { s[k] = true; });
+        return s;
+    };
+
+    // 約物。ブラウザの text-spacing-trim も面倒を見るので、扱いを分ける
+    var YAKUMONO = setOf(['open', 'close', 'kuten', 'touten', 'nakaten', 'yakumono']);
+
+    // 全角の和文。字面のアキを実測して詰める対象。
+    // 欧文・半角数字を入れないのは、フォント側が字幅とカーニングを持っており、
+    // こちらが詰めると設計を壊してしまうため。
+    var ZENKAKU = setOf([
+        'hiragana', 'katakana', 'kana-half', 'kanji', 'choon', 'repeat',
+        'hyphen', 'dash', 'punct-full', 'latin-full', 'digit-full'
+    ]);
+
+    var WESTERN = setOf(['latin', 'digit', 'latin-punct']);
+
+    // text-spacing-trim が約物を詰める量。仕様どおりの二分で、
+    // 明朝・ゴシックとも実測で 0.5em ちょうどだった。
+    // 対応ブラウザではこの分を差し引いてから、こちらの詰めを重ねる。
+    var NATIVE_TRIM = 0.5;
+
+    // 約物のアキは「どの約物の、どちら側か」で 12 通りある。
+    // InDesign の文字組みアキ量設定と同じで、ここをまとめてしまうと
+    // 「1）はとても狭いのに）年は広い」といった調整のきかなさが出る。
+    // すべて別々の CSS 変数に対応させ、個別に動かせるようにしてある。
+    var AKI_AFTER = {
+        open: 'open-after',        // 「（ の後
+        close: 'close-after',      // 」） の後
+        kuten: 'kuten-after',      // 。 の後
+        touten: 'touten-after',    // 、 の後
+        nakaten: 'nakaten-after',  // ・： の後
+        yakumono: 'bang-after'     // ！？ の後
+    };
+
+    var AKI_BEFORE = {
+        open: 'open-before',       // 「（ の前
+        close: 'close-before',     // 」） の前
+        kuten: 'kuten-before',     // 。 の前
+        touten: 'touten-before',   // 、 の前
+        nakaten: 'nakaten-before', // ・： の前
+        yakumono: 'bang-before'    // ！？ の前
+    };
+
+    // ------------------------------------------------------------------
+    // 既定オプション
+    // ------------------------------------------------------------------
+    var DEFAULTS = {
+        // class 名の接頭辞。ページ側の .number や .alpha と衝突させないため
+        prefix: 'sweet-type__',
+        // この中のテキストは処理しない
+        skipSelector: 'script, style, textarea, code, pre, rt, [data-sweet-type-skip]',
+        // 'metrics' … 1 文字ずつ span にして実測値を書き出す（既定）
+        // 'class'   … 文字種の連なりごとに span にするだけ。実測しない
+        mode: 'metrics',
+        // 半角スペース・改行も span で包むか
+        wrapSpace: false,
+        // 行末に来た詰めを打ち消して、版面から字がはみ出さないようにする
+        trimLineEnds: true
+    };
+
+    // ------------------------------------------------------------------
+    // 書記素単位への分割
+    //
+    // txt[i] は UTF-16 コード単位を返すため「𠮷」のようなサロゲートペアや
+    // 結合文字が途中で割れる。Intl.Segmenter があればそれを使う。
+    // ------------------------------------------------------------------
+    var segmenter = (typeof Intl !== 'undefined' &amp;&amp; typeof Intl.Segmenter === 'function')
+        ? new Intl.Segmenter('ja', { granularity: 'grapheme' })
+        : null;
+
+    function toGraphemes(text) {
+        if (segmenter) {
+            var out = [];
+            var it = segmenter.segment(text)[Symbol.iterator]();
+            for (var s = it.next(); !s.done; s = it.next()) out.push(s.value.segment);
+            return out;
+        }
+        return Array.from(text);
+    }
+
+    // ------------------------------------------------------------------
+    // 文字種判定
+    // ------------------------------------------------------------------
+    var classifyCache = new Map();
+
+    /**
+     * 1 文字（書記素）の文字種を返す。
+     * @param {string} ch
+     * @returns {string[]} 基本の文字種名を先頭とする配列（例: ['hiragana', 'small']）
+     */
+    function classify(ch) {
+        var cached = classifyCache.get(ch);
+        if (cached) return cached;
+
+        // 結合文字が付いている場合は基底文字で判定する
+        var base = ch.length &gt; 1 ? Array.from(ch)[0] : ch;
+
+        var type = FALLBACK;
+        for (var i = 0; i &lt; RULES.length; i++) {
+            if (RULES[i][1].test(base)) { type = RULES[i][0]; break; }
+        }
+
+        var types = [type];
+        if ((type === 'hiragana' || type === 'katakana' || type === 'kana-half') &amp;&amp; SMALL_KANA.test(base)) {
+            types.push('small');
+        }
+
+        classifyCache.set(ch, types);
+        return types;
+    }
+
+    /**
+     * テキストを文字種ごとの連なりに分割する。DOM を触らないので単体で使える。
+     * @param {string} text
+     * @returns {{types: string[], text: string}[]}
+     */
+    function tokenize(text) {
+        var graphemes = toGraphemes(text);
+        var tokens = [];
+        var current = null;
+        var currentKey = null;
+
+        for (var i = 0; i &lt; graphemes.length; i++) {
+            var types = classify(graphemes[i]);
+            var key = types.join(' ');
+            if (current &amp;&amp; key === currentKey) {
+                current.text += graphemes[i];
+            } else {
+                current = { types: types, text: graphemes[i] };
+                currentKey = key;
+                tokens.push(current);
+            }
+        }
+        return tokens;
+    }
+
+    // ------------------------------------------------------------------
+    // フォントメトリクスの実測
+    //
+    // canvas の TextMetrics から、字面の左右の余白（サイドベアリング）を取る。
+    // 同じ「ひらがな」でも「い」は 0.11em、「く」は 0.36em と 3 倍以上違い、
+    // しかも書体で変わるので、クラスごとの固定値では精度が出ない。
+    // ------------------------------------------------------------------
+    var ctx = null;
+    var metricsCache = new Map(); // fontKey -&gt; Map(char -&gt; metrics)
+
+    function getContext() {
+        if (!ctx &amp;&amp; typeof document !== 'undefined') {
+            ctx = document.createElement('canvas').getContext('2d');
+        }
+        return ctx;
+    }
+
+    function fontInfoOf(el) {
+        var cs = getComputedStyle(el);
+        // サイズを 100px に正規化して測り、em に換算する
+        return {
+            font: cs.fontStyle + ' ' + cs.fontWeight + ' 100px ' + cs.fontFamily,
+            size: parseFloat(cs.fontSize) || 16
+        };
+    }
+
+    function measure(font, ch) {
+        var table = metricsCache.get(font);
+        if (!table) { table = new Map(); metricsCache.set(font, table); }
+
+        var m = table.get(ch);
+        if (m) return m;
+
+        var c = getContext();
+        if (!c) return null;
+        c.font = font;
+        var tm = c.measureText(ch);
+
+        m = {
+            adv: tm.width / 100,
+            // 字面の左余白 / 右余白
+            lsb: -tm.actualBoundingBoxLeft / 100,
+            rsb: (tm.width - tm.actualBoundingBoxRight) / 100
+        };
+        table.set(ch, m);
+        return m;
+    }
+
+    var hasNativeTrim = (typeof CSS !== 'undefined') &amp;&amp; CSS.supports('text-spacing-trim', 'trim-start');
+
+    // ------------------------------------------------------------------
+    // DOM への適用
+    // ------------------------------------------------------------------
+    function resolveTargets(target) {
+        if (!target) return [];
+        if (typeof target === 'string') {
+            return Array.prototype.slice.call(document.querySelectorAll(target));
+        }
+        if (target.nodeType === 1) return [target];
+        if (typeof target.length === 'number') {
+            return Array.prototype.filter.call(target, function (n) { return n &amp;&amp; n.nodeType === 1; });
+        }
+        return [];
+    }
+
+    function collectTextNodes(root, opts) {
+        var walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+            acceptNode: function (node) {
+                if (!node.nodeValue) return NodeFilter.FILTER_REJECT;
+                var parent = node.parentElement;
+                if (!parent) return NodeFilter.FILTER_REJECT;
+                // 二重適用の防止
+                if (parent.hasAttribute('data-sweet-type-span')) return NodeFilter.FILTER_REJECT;
+                if (opts.skipSelector &amp;&amp; parent.closest(opts.skipSelector)) return NodeFilter.FILTER_REJECT;
+                return NodeFilter.FILTER_ACCEPT;
+            }
+        });
+
+        var nodes = [];
+        while (walker.nextNode()) nodes.push(walker.currentNode);
+        return nodes;
+    }
+
+    // テキストを「セル」に分ける。metrics なら 1 文字ずつ、class なら文字種の連なりごと
+    function toCells(text, opts) {
+        if (opts.mode !== 'metrics') return tokenize(text);
+        return toGraphemes(text).map(function (ch) {
+            return { types: classify(ch), text: ch };
+        });
+    }
+
+    // 隣り合う 2 文字の「字面のアキ」を実測する
+    function gapOf(a, b, fontA, fontB) {
+        var ma = measure(fontA.font, Array.from(a.text).pop());
+        var mb = measure(fontB.font, Array.from(b.text)[0]);
+        if (!ma || !mb) return null;
+        // margin は左側 span の em で指定するため、右側の余白を左側基準へ換算する。
+        return ma.rsb + mb.lsb * fontB.size / fontA.size;
+    }
+
+    /**
+     * セル i と i+1 のあいだをどう扱うかを決める。
+     *
+     * 約物のアキは「約物のどちら側か」で必要な量が違う。たとえば
+     * 「（の前」と「）の前」はまったく別物なので、ひとつの値でまとめると
+     * 片方が詰まりすぎ、もう片方が空きすぎる。そこで位置ごとに種別を返し、
+     * 実際の量は CSS 側の変数で決める。
+     *
+     * @returns {null | {kind:string, gap:number}}
+     *   kind は 'tsume'（かな・漢字どうし）／'autospace'（和欧間）／
+     *   'open' 'close' 'kuten' 'touten' 'nakaten' 'bang'（約物の各位置）／
+     *   'pair'（約物どうし）
+     */
+    function boundaryOf(a, b, fontA, fontB, nativeTrim) {
+        var ta = a.types[0];
+        var tb = b.types[0];
+
+        var aY = YAKUMONO[ta], bY = YAKUMONO[tb];
+        var aZ = ZENKAKU[ta], bZ = ZENKAKU[tb];
+        var aW = WESTERN[ta], bW = WESTERN[tb];
+
+        // 和欧間アキ。
+        // ブラウザにも text-autospace があるが、既定では働かず、有効にしても
+        // 1/8 em 固定で量を変えられない。sweet-type.css で切ってこちらが持つ。
+        if ((aZ &amp;&amp; bW) || (aW &amp;&amp; bZ)) return { kind: 'autospace' };
+
+        // 空白・絵文字などが絡む境界は触らない
+        if (!(aY || aZ || aW) || !(bY || bZ || bW) || !fontA || !fontB) return null;
+
+        var gap = gapOf(a, b, fontA, fontB);
+        if (gap === null) return null;
+
+        // 約物どうしの連続。text-spacing-trim が二分詰めるので、
+        // その分を引いた「残りのアキ」を書き出す（詰めが二重にかからない）
+        if (aY &amp;&amp; bY) {
+            return { kind: 'pair', gap: gap - (nativeTrim ? NATIVE_TRIM : 0) };
+        }
+
+        if (aY || bY) {
+            // 約物と、その隣（和文でも欧文でもよい）。
+            // 「。1946」のように相手が欧文でも、句点の後のアキは要る。
+            //
+            // アキ量は InDesign の文字組みアキ量設定と同じ数えかたにする。
+            // すなわち「その約物自身が持っている余白」だけを見て、隣に来る字の
+            // 字面は数えない。こうすると
+            //   ・「家！」と「か？」でアキが変わらない
+            //   ・IDML から読み込んだ値をそのまま使える
+            var m = aY ? measure(fontA.font, Array.from(a.text).pop())
+                       : measure(fontB.font, Array.from(b.text)[0]);
+            if (!m) return null;
+            return {
+                kind: aY ? AKI_AFTER[ta] : AKI_BEFORE[tb],
+                gap: aY ? m.rsb : m.lsb * fontB.size / fontA.size
+            };
+        }
+
+        // 和文どうし
+        return aZ &amp;&amp; bZ ? { kind: 'tsume', gap: gap } : null;
+    }
+
+    function applyBoundary(span, info) {
+        if (!info) return;
+        if (info.kind === 'autospace') {
+            span.setAttribute('data-sweet-type-boundary', 'autospace');
+            return;
+        }
+        span.style.setProperty('--sweet-type-g', info.gap.toFixed(4) + 'em');
+        // 'tsume' は既定の扱いなので印を付けない
+        if (info.kind !== 'tsume') span.setAttribute('data-sweet-type-boundary', info.kind);
+    }
+
+    function wrapTextNode(node, opts, useMetrics) {
+        var cells = toCells(node.nodeValue, opts);
+        var frag = document.createDocumentFragment();
+        var spans = [];
+
+        for (var i = 0; i &lt; cells.length; i++) {
+            var cell = cells[i];
+            if (cell.types[0] === 'space' &amp;&amp; !opts.wrapSpace) {
+                frag.appendChild(document.createTextNode(cell.text));
+                spans.push(null);
+                continue;
+            }
+            var span = document.createElement('span');
+            span.className = cell.types.map(function (t) { return opts.prefix + t; }).join(' ');
+            span.setAttribute('data-sweet-type-span', '');
+            // textContent なのでエスケープを意識する必要がない
+            span.textContent = cell.text;
+            frag.appendChild(span);
+            spans.push(span);
+        }
+
+        node.parentNode.replaceChild(frag, node);
+
+        // span を DOM に入れ、文字種別 CSS が適用された後の実フォントで測る。
+        // 境界の margin は左側 span の em なので、左右のサイズが違う場合も換算する。
+        var firstSpan = spans.find(function (s) { return s; });
+        var nativeTrim = !!firstSpan &amp;&amp; hasNativeTrim
+            &amp;&amp; getComputedStyle(firstSpan).textSpacingTrim !== 'space-all';
+        for (var j = 0; j &lt; cells.length - 1; j++) {
+            if (!useMetrics || !spans[j] || !spans[j + 1]) continue;
+            applyBoundary(spans[j], boundaryOf(
+                cells[j], cells[j + 1], fontInfoOf(spans[j]), fontInfoOf(spans[j + 1]), nativeTrim));
+        }
+        return spans;
+    }
+
+    /**
+     * 対象要素のテキストを文字種ごとの &lt;span&gt; に分割する。
+     * @param {Element|NodeList|Element[]|string} target 要素・要素リスト・CSS セレクタ
+     * @param {object} [options] DEFAULTS 参照
+     * @returns {number} 処理した要素の数
+     */
+    function apply(target, options) {
+        var opts = Object.assign({}, DEFAULTS, options || {});
+        var targets = resolveTargets(target);
+        var useMetrics = opts.mode === 'metrics' &amp;&amp; !!getContext();
+        var usedFonts = [];
+
+        for (var i = 0; i &lt; targets.length; i++) {
+            var root = targets[i];
+            var nodes = collectTextNodes(root, opts);
+            for (var j = 0; j &lt; nodes.length; j++) {
+                var wrapped = wrapTextNode(nodes[j], opts, useMetrics);
+                if (useMetrics) wrapped.forEach(function (span) {
+                    if (span) usedFonts.push(fontInfoOf(span).font);
+                });
+            }
+            root.setAttribute('data-sweet-type', '');
+            writeLineHeight(root);
+            if (opts.trimLineEnds) observeLineEnds(root);
+        }
+
+        // Web フォントの読み込み前に測っていた場合は測り直す。
+        // status だけ見ると、別の書体が読み終わっていて 'loaded' になっている間に
+        // 本文の書体がまだ来ていない、という取りこぼしが起きるので、
+        // 実際に使う書体が使えるかどうかを check() で確かめる
+        if (useMetrics &amp;&amp; document.fonts) {
+            var waiting = document.fonts.status !== 'loaded';
+            usedFonts.forEach(function (f) {
+                try { if (!document.fonts.check(f)) waiting = true; } catch (e) { /* 書体名が不正な場合 */ }
+            });
+            if (waiting) {
+                document.fonts.ready.then(function () {
+                    metricsCache.clear();
+                    remeasure(targets, opts);
+                    if (opts.trimLineEnds) targets.forEach(function (t) { markLineEnds(t); });
+                });
+            }
+        }
+
+        return targets.length;
+    }
+
+    // 既存の span を作り直さずに --sweet-type-g だけ測り直す
+    function remeasure(targets, opts) {
+        for (var i = 0; i &lt; targets.length; i++) {
+            var spans = targets[i].querySelectorAll('[data-sweet-type-span]');
+            for (var j = 0; j &lt; spans.length; j++) {
+                var span = spans[j];
+                var next = span.nextElementSibling;
+                if (!next || !next.hasAttribute('data-sweet-type-span')) continue;
+                // 直前に空白テキストノードが挟まっている場合は境界ではない
+                if (span.nextSibling !== next) continue;
+
+                var a = { types: classify(Array.from(span.textContent).pop()), text: span.textContent };
+                var b = { types: classify(Array.from(next.textContent)[0]), text: next.textContent };
+                span.style.removeProperty('--sweet-type-g');
+                span.removeAttribute('data-sweet-type-boundary');
+                var nativeTrim = hasNativeTrim &amp;&amp; getComputedStyle(span).textSpacingTrim !== 'space-all';
+                applyBoundary(span, boundaryOf(
+                    a, b, fontInfoOf(span), fontInfoOf(next), nativeTrim));
+            }
+        }
+    }
+
+    // ------------------------------------------------------------------
+    // 行末の詰めを打ち消す
+    //
+    // 負の margin-right は、行末に来ても無視されるわけではない。
+    // ブラウザは行の幅を「マージンこみ」で数えるので、負のぶんだけ
+    // 「まだ入る」と判断してしまい、結果その字の枠が版面の右へはみ出す。
+    // 実測で約物なら 0.27em、かなでも 0.2em ほど出ることがある。
+    //
+    // 行末に来た span に印を付け、CSS 側でマージンを 0 に戻す。
+    // 印を外すと行の幅が変わって折り返し位置が動くことがあるので、
+    // 落ち着くまで数回くり返す。
+    // ------------------------------------------------------------------
+    function markLineEnds(root) {
+        var spans = root.querySelectorAll('[data-sweet-type-span]');
+        var i, j;
+
+        // 印を外すとレイアウトが戻ってしまうので、いまの状態のまま測り、
+        // 「あるべき印」と食い違うところだけ直す。これを落ち着くまでくり返す
+        for (var pass = 0; pass &lt; 5; pass++) {
+            var lines = new Map();
+            for (i = 0; i &lt; spans.length; i++) {
+                var rects = spans[i].getClientRects();
+                for (j = 0; j &lt; rects.length; j++) {
+                    var r = rects[j];
+                    if (!r.width) continue;
+                    var top = Math.round(r.top);
+                    var cur = lines.get(top);
+                    if (!cur || r.right &gt; cur.right) lines.set(top, { right: r.right, span: spans[i] });
+                }
+            }
+
+            var want = new Set();
+            lines.forEach(function (v) { want.add(v.span); });
+
+            var changed = false;
+            for (i = 0; i &lt; spans.length; i++) {
+                var has = spans[i].hasAttribute('data-sweet-type-eol');
+                var should = want.has(spans[i]);
+                if (has === should) continue;
+                changed = true;
+                if (should) spans[i].setAttribute('data-sweet-type-eol', '');
+                else spans[i].removeAttribute('data-sweet-type-eol');
+            }
+            if (!changed) break;
+        }
+    }
+
+    // 本文の行送りを「文字サイズに対する倍率」として書き出す。
+    // 欧文を拡大したときに、その行だけ行間が広がるのを CSS 側で打ち消すために使う
+    function writeLineHeight(root) {
+        var cs = getComputedStyle(root);
+        var size = parseFloat(cs.fontSize);
+        var lh = parseFloat(cs.lineHeight);   // normal のときは NaN
+        if (!size || !lh) return;
+        root.style.setProperty('--sweet-type-line-height', (lh / size).toFixed(4));
+    }
+
+    // 幅が変われば行末も変わるので、要素ごとに監視しておく
+    var observers = new WeakMap();
+
+    function observeLineEnds(root) {
+        markLineEnds(root);
+        if (observers.has(root) || typeof ResizeObserver !== 'function') return;
+
+        var scheduled = false;
+        var ro = new ResizeObserver(function () {
+            if (scheduled) return;
+            scheduled = true;
+            requestAnimationFrame(function () {
+                scheduled = false;
+                if (root.hasAttribute('data-sweet-type')) markLineEnds(root);
+            });
+        });
+        ro.observe(root);
+        observers.set(root, ro);
+    }
+
+    /**
+     * apply() で挿入した &lt;span&gt; を取り除き、元の DOM 構造に戻す。
+     * @param {Element|NodeList|Element[]|string} target
+     * @returns {number} 処理した要素の数
+     */
+    function restore(target) {
+        var targets = resolveTargets(target);
+
+        for (var i = 0; i &lt; targets.length; i++) {
+            var root = targets[i];
+            var spans = root.querySelectorAll('[data-sweet-type-span]');
+            for (var j = spans.length - 1; j &gt;= 0; j--) {
+                var span = spans[j];
+                span.parentNode.replaceChild(document.createTextNode(span.textContent), span);
+            }
+            root.removeAttribute('data-sweet-type');
+            root.style.removeProperty('--sweet-type-line-height');
+            var ro = observers.get(root);
+            if (ro) { ro.disconnect(); observers.delete(root); }
+            root.normalize(); // 隣り合ったテキストノードをまとめる
+        }
+        return targets.length;
+    }
+
+    // ------------------------------------------------------------------
+    // 自動適用
+    //
+    // js を読み込んで .sweet-type を付けるだけで動く。
+    // 対象を変えたい場合は script タグに data-sweet-type-selector を書く。
+    //   &lt;script src="sweet-type.js" data-sweet-type-selector=".honbun, article p"&gt;&lt;/script&gt;
+    // ------------------------------------------------------------------
+    var AUTO_SELECTOR = '.sweet-type, [data-sweet-type]';
+
+    // currentScript は DOMContentLoaded の時点では null になるので、いま読んでおく
+    var thisScript = (typeof document !== 'undefined') ? document.currentScript : null;
+
+    function autoInit() {
+        apply((thisScript &amp;&amp; thisScript.getAttribute('data-sweet-type-selector')) || AUTO_SELECTOR);
+    }
+
+    if (typeof document !== 'undefined') {
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', autoInit, { once: true });
+        } else {
+            autoInit();
+        }
+    }
+
+    global.SweetType = {
+        apply: apply,
+        restore: restore,
+        tokenize: tokenize,
+        classify: classify,
+        measure: measure,
+        TYPES: TYPES,
+        DEFAULTS: DEFAULTS,
+        support: { textSpacingTrim: hasNativeTrim }
+    };
+})(typeof globalThis !== 'undefined' ? globalThis : this);
+    </template>
+    <style>
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            background: #fff;
+            color: #111;
+            font-family: system-ui, -apple-system, sans-serif;
+            /* 画面いっぱいに収め、スクロールはパネルとプレビューの中だけで起こす */
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        header {
+            padding: 10px 24px;
+            border-bottom: 1px solid #e3e3e3;
+            flex: none;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+        header h1 { flex: none; }
+        header .snapshots { flex: 1 1 auto; min-width: 100px; }
+
+        .save-bar {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 12px;
+            white-space: nowrap;
+            margin-left: auto;
+        }
+        .save-bar #save-status { color: #666; }
+        .save-bar #save-status[data-ok] { color: #1a7f37; }
+
+        .brand { flex: none; line-height: 1.1; white-space: nowrap; }
+        .brand h1 { font-size: 20px; margin: 0; font-weight: 700; letter-spacing: -.03em; }
+        .brand p { margin: 3px 0 0; font-size: 10px; color: #777; letter-spacing: .04em; }
+
+        .layout {
+            display: grid;
+            grid-template-columns: 320px 1fr;
+            flex: 1;
+            min-height: 0;
+        }
+
+        /* 幅が狭いときは縦に積んで、ページ全体をスクロールさせる */
+        @media (max-width: 900px) {
+            body { height: auto; overflow: visible; }
+            .layout { grid-template-columns: 1fr; }
+            .panel, .preview { overflow: visible; }
+        }
+
+        /* ---- 左：操作パネル。ここだけスクロールさせ、プレビューは出したままにする ---- */
+        .panel {
+            padding: 20px 24px 40px;
+            border-right: 1px solid #e3e3e3;
+            font-size: 13px;
+            overflow-y: auto;
+            min-height: 0;
+        }
+
+        .panel h2 {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: .08em;
+            color: #888;
+            margin: 24px 0 10px;
+            font-weight: 600;
+        }
+        .panel h2:first-child { margin-top: 0; }
+
+        /* h2 の代わりに開閉できる details。見た目は h2 と揃える。
+           既定で閉じているものが並ぶので、summary 自体にゆとりを持たせて
+           閉じた状態でも項目どうしが詰まって見えないようにする */
+        .panel details.section {
+            margin: 8px 0 0;
+            border-bottom: 1px solid #eee;
+        }
+        .panel details.section:first-child { margin-top: 0; }
+        .panel details.section[open] { padding-bottom: 6px; }
+        .panel details.section > summary {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: .08em;
+            color: #888;
+            font-weight: 600;
+            cursor: pointer;
+            padding: 14px 0;
+            margin-bottom: 4px;
+        }
+        .panel details.section:not([open]) > summary { margin-bottom: 0; padding: 14px 0; }
+
+        /* h2 セクションの中の一項目だけを開閉させたい場合（InDesign 読み込みなど） */
+        .field-details { margin: 10px 0 14px; }
+        .field-details > summary {
+            cursor: pointer;
+            font-weight: 500;
+            padding: 6px 0;
+            margin-bottom: 6px;
+        }
+        .field-details:not([open]) > summary { margin-bottom: 0; }
+
+        .field { margin-bottom: 14px; }
+
+        .field .row {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            margin-bottom: 3px;
+        }
+
+        .field label { font-weight: 500; }
+        .field output { font-variant-numeric: tabular-nums; color: #666; font-size: 12px; }
+        .hint { font-size: 11px; color: #999; margin-top: 2px; line-height: 1.5; }
+
+        .type-grid { display: grid; gap: 12px; }
+        .type-card {
+            border: 1px solid #e2e2e2;
+            border-radius: 8px;
+            padding: 6px 12px;
+            background: #fafafa;
+        }
+        .type-card[open] { padding-bottom: 12px; }
+        .type-card summary { font-size: 13px; padding: 6px 0; margin: 0 0 8px; cursor: pointer; font-weight: 600; }
+        .type-card:not([open]) summary { margin-bottom: 0; }
+        /* .type-card-grid の display:grid が details の閉状態を上書きしてしまうので、
+           閉じているときは明示的に隠す */
+        details:not([open]) > *:not(summary) { display: none; }
+        .type-card-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 7px; }
+        .type-card-grid.cols-2 { grid-template-columns: 1fr 1fr; }
+        .type-card-grid .font-field { grid-column: 1 / -1; }
+        .type-card-grid label { display: block; font-size: 10px; color: #777; margin-bottom: 3px; }
+        .type-card-grid input, .type-card-grid select {
+            width: 100%; min-width: 0; font: inherit; font-size: 11px; padding: 5px 6px;
+            border: 1px solid #ccc; border-radius: 4px; background: #fff;
+        }
+
+        input[type=range] { width: 100%; margin: 0; }
+
+        table.aki { width: 100%; border-collapse: collapse; margin-bottom: 4px; }
+        table.aki th, table.aki td { padding: 2px 0; }
+        table.aki thead th { font-size: 11px; color: #888; font-weight: 600; text-align: center; }
+        table.aki tbody th { text-align: left; font-weight: 500; white-space: nowrap; padding-right: 8px; }
+        table.aki input {
+            width: 100%; font: inherit; font-size: 12px; padding: 3px 5px;
+            border: 1px solid #ccc; border-radius: 4px; background: #fff; color: inherit;
+            font-variant-numeric: tabular-nums;
+            box-sizing: border-box;
+            min-width: 0;
+        }
+        table.aki td { width: 6.2em; padding-left: 6px; }
+
+        input[type=text] {
+            width: 100%; font: inherit; font-size: 12px; padding: 6px 8px;
+            border: 1px solid #ccc; border-radius: 4px; background: #fff; color: inherit;
+        }
+
+        select, textarea {
+            width: 100%;
+            font: inherit;
+            padding: 6px 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            background: #fff;
+            color: inherit;
+        }
+
+        textarea { min-height: 90px; resize: vertical; line-height: 1.6; }
+
+        /* ---- 右：プレビュー ---- */
+        .preview {
+            padding: 20px 24px 24px;
+            min-width: 0;
+            min-height: 0;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .view-tabs {
+            flex: none;
+            display: flex;
+            gap: 4px;
+            margin-bottom: 16px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        .view-tabs button[aria-selected="true"] {
+            background: #111;
+            border-color: #111;
+            color: #fff;
+        }
+        [hidden] { display: none !important; }
+        #preview-view { min-height: 0; overflow: auto; }
+
+        /* 段を横に並べる。折り返さず、はみ出す場合は横スクロールさせて
+           「プレビュー」と「比較対象」が重ならないようにする。
+
+           また、下の CSS を読むためにスクロールしても本文が見えなくなると
+           スライダーを動かした結果が確かめられないので、上に貼り付けておく */
+        .compare {
+            display: flex;
+            gap: 40px;
+            align-items: flex-start;
+            overflow-x: auto;
+            padding: 0 0 8px;
+        }
+
+        .preview-top {
+            position: sticky;
+            top: 0;
+            background: #fff;
+            z-index: 1;
+        }
+
+        .compare > div { flex: 0 0 auto; }
+
+        .compare h3.with-select,
+        .compare h3.with-toggles {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            text-transform: none;
+            letter-spacing: 0;
+        }
+        .compare h3.with-select select {
+            width: auto;
+            flex: 1;
+            min-width: 0;
+            font-size: 11px;
+            padding: 2px 4px;
+            font-weight: 400;
+            color: #444;
+        }
+        .compare h3.with-toggles { justify-content: space-between; }
+        .compare h3.with-toggles .toggle-group {
+            display: flex;
+            gap: 14px;
+            font-size: 11px;
+            color: #666;
+            font-weight: 400;
+        }
+        .compare h3.with-toggles .toggle-group label {
+            display: inline-flex; align-items: center; gap: 5px; font-weight: 400; white-space: nowrap;
+        }
+        .compare-note {
+            font-size: 11px;
+            color: #999;
+            margin-top: 8px;
+            line-height: 1.6;
+        }
+        .compare-note b { color: #111; font-variant-numeric: tabular-nums; }
+
+        .sheet[contenteditable] { cursor: text; outline: none; }
+        .sheet[contenteditable]:focus { box-shadow: 0 0 0 2px rgba(0, 0, 0, .08); border-radius: 2px; }
+
+        .compare h3 {
+            font-family: system-ui, sans-serif;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: .08em;
+            color: #888;
+            font-weight: 600;
+            margin: 0 0 8px;
+            padding-bottom: 6px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .sheet {
+            text-align: justify;
+            line-break: strict;
+            padding: 0;
+            margin: 0;
+            white-space: normal;
+            /* 版面の左右をわかりやすくする線。既定では透明にしておき、
+               幅がずれないよう線そのものは常に置いておく */
+            border-left: 1px solid transparent;
+            border-right: 1px solid transparent;
+        }
+        .sheet p { margin: 0 0 1em; }
+        .sheet p:last-child { margin-bottom: 0; }
+        .guide .sheet {
+            border-left-color: #f0a;
+            border-right-color: #f0a;
+        }
+
+        .snapshots { display: flex; flex-wrap: wrap; gap: 4px; }
+        .snapshots:empty::before {
+            content: 'まだありません';
+            color: #999; font-size: 11px;
+        }
+        .snapshots button { padding: 3px 8px; font-size: 11px; }
+        .snapshots button.active { background: #111; color: #fff; border-color: #111; }
+        .snapshots .del {
+            padding: 3px 5px; color: #999; border-color: #ddd;
+        }
+
+        /* ---- 出力 ---- */
+        .out {
+            margin-top: 0;
+            min-height: 0;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .out-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        .out-actions { display: flex; gap: 6px; }
+
+        .out h3 {
+            font-size: 11px; text-transform: uppercase; letter-spacing: .08em;
+            color: #888; font-weight: 600; margin: 0;
+        }
+
+        button {
+            font: inherit;
+            font-size: 12px;
+            padding: 5px 12px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            background: #fff;
+            color: inherit;
+            cursor: pointer;
+        }
+        button:hover { background: #f5f5f5; }
+
+        pre {
+            flex: 1;
+            min-height: 0;
+            margin: 0;
+            max-height: none;
+            padding: 14px 16px;
+            background: #f7f7f7;
+            border: 1px solid #e3e3e3;
+            border-radius: 6px;
+            font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+            font-size: 12px;
+            line-height: 1.65;
+            overflow: auto;
+            tab-size: 4;
+        }
+
+        @media (max-width: 900px) {
+            .preview { min-height: 70vh; overflow: hidden; }
+            #code-view pre { min-height: 60vh; }
+        }
+
+        .stat {
+            font-size: 12px;
+            color: #666;
+            padding: 6px 0 12px;
+            line-height: 1.7;
+            border-bottom: 1px solid #eee;
+        }
+        .stat b { color: #111; font-variant-numeric: tabular-nums; }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <div class="brand">
+            <h1>SweetType</h1>
+            <p>ウェブ文字組エディタ</p>
+        </div>
+        <div id="snapshots" class="snapshots"></div>
+        <div class="save-bar">
+            <span id="save-status">作業フォルダが未設定です</span>
+            <button id="pick-dir">作業フォルダを開く</button>
+            <button id="new-dir">新しい作業フォルダ</button>
+            <button id="save-css">CSSを保存</button>
+            <button id="reconnect" hidden>前回のフォルダに再接続</button>
+        </div>
+    </header>
+
+    <div class="layout">
+        <div class="panel">
+            <details class="section">
+                <summary>スナップショット</summary>
+                <div class="field">
+                    <div style="display:flex;gap:6px">
+                        <input type="text" id="snap-name" placeholder="名前" autocomplete="off" style="flex:1">
+                        <button id="snap-save">現在の設定を保存</button>
+                    </div>
+                </div>
+            </details>
+
+            <details class="section">
+                <summary>ウェブフォントを追加</summary>
+                <div class="field">
+                    <input type="text" id="wf-url" placeholder="Google Fonts の CSS URL、または <link> タグを貼り付け" autocomplete="off">
+                    <button id="wf-load" style="margin-top:6px;width:100%">読み込む</button>
+                    <div class="hint" id="wf-result"></div>
+                </div>
+            </details>
+
+            <details class="section">
+                <summary>ブロック</summary>
+                <div class="field">
+                    <div class="row">
+                        <label for="measure">行の長さ</label>
+                        <output id="o-measure">24字（432px）</output>
+                    </div>
+                    <div style="display:flex;gap:12px;margin-bottom:4px">
+                        <label style="flex-direction:row;gap:4px;align-items:center;font-weight:400">
+                            <input type="radio" name="measure-unit" value="cols" checked autocomplete="off"> 文字数
+                        </label>
+                        <label style="flex-direction:row;gap:4px;align-items:center;font-weight:400">
+                            <input type="radio" name="measure-unit" value="px" autocomplete="off"> ピクセル
+                        </label>
+                    </div>
+                    <div class="row" style="align-items:center;gap:8px;margin-bottom:0">
+                        <input type="range" id="measure" style="flex:1" min="10" max="45" step="1" value="24" autocomplete="off">
+                        <input type="number" id="measure-number" style="width:5.5em" min="1" step="1" value="24" autocomplete="off">
+                    </div>
+                </div>
+                <div class="field">
+                    <div class="row"><label for="lh">行送り</label><output id="o-lh">2</output></div>
+                    <input type="range" id="lh" min="1.4" max="2.6" step="0.05" value="2" autocomplete="off">
+                </div>
+            </details>
+
+            <h2>文字設定</h2>
+            <div class="type-grid field">
+                <details class="type-card" data-type-card="base">
+                    <summary>ベース</summary>
+                    <div class="type-card-grid cols-2">
+                        <div class="font-field">
+                            <label for="font">フォント</label>
+                            <select id="font" autocomplete="off">
+                                <option value='"Noto Serif JP", serif'>Noto Serif JP（可変・ウェブフォント）</option>
+                                <option value='"Noto Sans JP", sans-serif'>Noto Sans JP（可変・ウェブフォント）</option>
+                                <option value='"Hiragino Mincho ProN", "Yu Mincho", serif'>ヒラギノ明朝</option>
+                                <option value='"Hiragino Sans", "Yu Gothic", sans-serif'>ヒラギノ角ゴ</option>
+                                <option value='"Yu Mincho", "YuMincho", serif'>游明朝</option>
+                                <option value='"Yu Gothic", "YuGothic", sans-serif'>游ゴシック</option>
+                                <option value='serif'>serif（既定）</option>
+                                <option value='sans-serif'>sans-serif（既定）</option>
+                            </select>
+                        </div>
+                        <div><label for="size">サイズ(px)</label><input id="size" type="number" min="12" max="32" step="1" value="18" autocomplete="off"></div>
+                        <div><label for="base-weight">太さ</label><input id="base-weight" type="number" min="0" max="900" step="10" value="0" title="0で既定（400）" autocomplete="off"></div>
+                    </div>
+                </details>
+                <details class="type-card" data-type-card="kanji">
+                    <summary>漢字</summary>
+                    <div class="type-card-grid">
+                        <div class="font-field"><label for="type-kanji-font">フォント</label><select id="type-kanji-font" autocomplete="off"></select></div>
+                        <div><label for="type-kanji-scale">大きさ</label><input id="type-kanji-scale" type="number" min="0.5" max="2" step="0.01" value="1"></div>
+                        <div><label for="type-kanji-weight">太さ</label><input id="type-kanji-weight" type="number" min="0" max="900" step="10" value="0" title="0でベースを継承"></div>
+                        <div><label for="type-kanji-spacing">アキ(em)</label><input id="type-kanji-spacing" type="number" min="-0.5" max="1" step="0.005" value="0"></div>
+                    </div>
+                </details>
+                <details class="type-card" data-type-card="hiragana">
+                    <summary>ひらがな</summary>
+                    <div class="type-card-grid">
+                        <div class="font-field"><label for="type-hiragana-font">フォント</label><select id="type-hiragana-font" autocomplete="off"></select></div>
+                        <div><label for="type-hiragana-scale">大きさ</label><input id="type-hiragana-scale" type="number" min="0.5" max="2" step="0.01" value="1"></div>
+                        <div><label for="type-hiragana-weight">太さ</label><input id="type-hiragana-weight" type="number" min="0" max="900" step="10" value="0" title="0でベースを継承"></div>
+                        <div><label for="type-hiragana-spacing">アキ(em)</label><input id="type-hiragana-spacing" type="number" min="-0.5" max="1" step="0.005" value="0"></div>
+                    </div>
+                </details>
+                <details class="type-card" data-type-card="katakana">
+                    <summary>カタカナ</summary>
+                    <div class="type-card-grid">
+                        <div class="font-field"><label for="type-katakana-font">フォント</label><select id="type-katakana-font" autocomplete="off"></select></div>
+                        <div><label for="type-katakana-scale">大きさ</label><input id="type-katakana-scale" type="number" min="0.5" max="2" step="0.01" value="1"></div>
+                        <div><label for="type-katakana-weight">太さ</label><input id="type-katakana-weight" type="number" min="0" max="900" step="10" value="0" title="0でベースを継承"></div>
+                        <div><label for="type-katakana-spacing">アキ(em)</label><input id="type-katakana-spacing" type="number" min="-0.5" max="1" step="0.005" value="0"></div>
+                    </div>
+                </details>
+                <details class="type-card" data-type-card="latin">
+                    <summary>英数字</summary>
+                    <div class="type-card-grid">
+                        <div class="font-field"><label for="type-latin-font">フォント</label><select id="type-latin-font" autocomplete="off"></select></div>
+                        <div><label for="type-latin-scale">大きさ</label><input id="type-latin-scale" type="number" min="0.5" max="2" step="0.01" value="1"></div>
+                        <div><label for="type-latin-weight">太さ</label><input id="type-latin-weight" type="number" min="0" max="900" step="10" value="0" title="0でベースを継承"></div>
+                        <div><label for="type-latin-spacing">アキ(em)</label><input id="type-latin-spacing" type="number" min="-0.5" max="1" step="0.005" value="0"></div>
+                    </div>
+                </details>
+                <details class="type-card" data-type-card="yakumono">
+                    <summary>約物</summary>
+                    <div class="type-card-grid">
+                        <div class="font-field"><label for="type-yakumono-font">フォント</label><select id="type-yakumono-font" autocomplete="off"></select></div>
+                        <div><label for="type-yakumono-scale">大きさ</label><input id="type-yakumono-scale" type="number" min="0.5" max="2" step="0.01" value="1"></div>
+                        <div><label for="type-yakumono-weight">太さ</label><input id="type-yakumono-weight" type="number" min="0" max="900" step="10" value="0" title="0でベースを継承"></div>
+                        <div><label for="type-yakumono-spacing">アキ(em)</label><input id="type-yakumono-spacing" type="number" min="-0.5" max="1" step="0.005" value="0"></div>
+                    </div>
+                </details>
+            </div>
+            <p class="hint" style="margin:-5px 0 14px">
+                太さは 0 でベース（既定 400、太字相当は 700）を継承します。ベースの字間は下の「文字詰め」の「全体の字間」で設定します。
+                カタカナには半角カナ・長音・繰返し、英数字には半角／全角、約物には括弧・句読点・中点・！？を含みます。
+            </p>
+
+            <details class="section">
+                <summary>文字詰め</summary>
+                <div class="hint" id="tsume-inert-note" hidden style="margin:-6px 0 12px;color:#b45309">
+                    「約物詰め」内の「字形のベース」が実測ツメ／halt 以外になっているため、
+                    このうち目標のアキ・詰めの強度・詰めの上限は今は効いていません。
+                </div>
+                <div class="field">
+                    <div class="row"><label for="tracking">全体の字間</label><output id="o-tracking">0em</output></div>
+                    <input type="range" id="tracking" min="-0.05" max="0.3" step="0.005" value="0" autocomplete="off">
+                    <div class="hint">かな・漢字の字送りをまとめて広げます（狭める方向は -0.05em まで）。約物のアキはこの分を差し引くので、指定した値のまま保たれます。「全体を少しあけて約物は詰める」組み方ができます。</div>
+                </div>
+                <div class="field">
+                    <div class="row"><label for="target">目標のアキ</label><output id="o-target">0.04em</output></div>
+                    <input type="range" id="target" min="0" max="0.2" step="0.01" value="0.04" autocomplete="off">
+                    <div class="hint">隣り合う字面のあいだに残すアキ。漢字どうしのアキ（0.04em 前後）が目安です。</div>
+                </div>
+                <div class="field">
+                    <div class="row"><label for="strength">詰めの強度</label><output id="o-strength">0.7</output></div>
+                    <input type="range" id="strength" min="0" max="1" step="0.05" value="0.7" autocomplete="off">
+                    <div class="hint">0 でベタ組み、1 で目標のアキまで完全に詰めます。</div>
+                </div>
+                <div class="field">
+                    <div class="row"><label for="max">詰めの上限</label><output id="o-max">0.25em</output></div>
+                    <input type="range" id="max" min="0" max="0.4" step="0.01" value="0.25" autocomplete="off">
+                    <div class="hint">「く」「う」など字面の小さい字が痩せすぎるのを防ぎます。</div>
+                </div>
+                <div class="field">
+                    <div class="row"><label for="autospace">和欧文間隔</label><output id="o-autospace">0.125em</output></div>
+                    <input type="range" id="autospace" min="0" max="0.4" step="0.005" value="0.125" autocomplete="off">
+                    <div class="hint">0.125em がブラウザ標準、0.25em が JIS の四分アキです。</div>
+                </div>
+            </details>
+
+            <details class="section">
+                <summary>約物詰め</summary>
+                <div class="field">
+                    <div class="row"><label for="base-mode">字形のベース</label></div>
+                    <select id="base-mode" autocomplete="off">
+                        <option value="normal">実測ツメ（通常字形）</option>
+                        <option value="palt">palt（プロポーショナル字形）</option>
+                        <option value="palt-kern">palt + kern</option>
+                        <option value="halt">halt（約物半角字形）</option>
+                        <option value="pwid">pwid（プロポーショナル幅）</option>
+                        <option value="hwid">hwid（半角字形）</option>
+                        <option value="fwid">fwid（全角字形）</option>
+                        <option value="proportional-width">font-variant-east-asian: proportional-width</option>
+                    </select>
+                    <div class="hint" id="base-mode-hint">通常字形を実測し、下の約物アキを最終値として適用します。</div>
+                </div>
+                <div class="field">
+                    <div class="row"><label for="preset">プリセット</label></div>
+                    <select id="preset" autocomplete="off">
+                        <option value="beta">ベタ組み（JIS・二分／四分アキ）</option>
+                        <option value="hankaku">アキなし（0em）</option>
+                    </select>
+                </div>
+                <details class="field-details">
+                    <summary>InDesign IDMLから読み込む</summary>
+                    <div class="field">
+                        <input type="file" id="idml" accept=".idml" style="font-size:12px" autocomplete="off">
+                        <div class="hint">
+                            InDesign は最小・最適・最大の 3 値を持ちますが、CSS の margin は
+                            固定値なので<b>最適値だけ</b>を使います。
+                        </div>
+                        <div id="idml-result" class="hint" style="color:#666"></div>
+                    </div>
+                </details>
+                <table class="aki">
+                    <thead>
+                        <tr><th></th><th>前</th><th>後</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <th>「（ 開き括弧</th>
+                            <td><input type="number" id="a-open-before" min="-0.2" max="0.7" step="0.005" autocomplete="off"></td>
+                            <td><input type="number" id="a-open-after" min="-0.2" max="0.7" step="0.005" autocomplete="off"></td>
+                        </tr>
+                        <tr>
+                            <th>」） 閉じ括弧</th>
+                            <td><input type="number" id="a-close-before" min="-0.2" max="0.7" step="0.005" autocomplete="off"></td>
+                            <td><input type="number" id="a-close-after" min="-0.2" max="0.7" step="0.005" autocomplete="off"></td>
+                        </tr>
+                        <tr>
+                            <th>。 句点</th>
+                            <td><input type="number" id="a-kuten-before" min="-0.2" max="0.7" step="0.005" autocomplete="off"></td>
+                            <td><input type="number" id="a-kuten-after" min="-0.2" max="0.7" step="0.005" autocomplete="off"></td>
+                        </tr>
+                        <tr>
+                            <th>、 読点</th>
+                            <td><input type="number" id="a-touten-before" min="-0.2" max="0.7" step="0.005" autocomplete="off"></td>
+                            <td><input type="number" id="a-touten-after" min="-0.2" max="0.7" step="0.005" autocomplete="off"></td>
+                        </tr>
+                        <tr>
+                            <th>・： 中点</th>
+                            <td><input type="number" id="a-nakaten-before" min="-0.2" max="0.7" step="0.005" autocomplete="off"></td>
+                            <td><input type="number" id="a-nakaten-after" min="-0.2" max="0.7" step="0.005" autocomplete="off"></td>
+                        </tr>
+                        <tr>
+                            <th>！？ 区切り約物</th>
+                            <td><input type="number" id="a-bang-before" min="-0.2" max="0.7" step="0.005" autocomplete="off"></td>
+                            <td><input type="number" id="a-bang-after" min="-0.2" max="0.7" step="0.005" autocomplete="off"></td>
+                        </tr>
+                        <tr>
+                            <th>」「 約物どうし</th>
+                            <td colspan="2"><input type="number" id="a-yakumono-pair" min="-0.2" max="0.8" step="0.005" autocomplete="off"></td>
+                        </tr>
+                        <tr>
+                            <th>行末の約物</th>
+                            <td colspan="2"><input type="number" id="a-eol-yakumono" min="-0.3" max="0.5" step="0.005" autocomplete="off"></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </details>
+        </div>
+
+        <div class="preview">
+            <div class="view-tabs" role="tablist" aria-label="右側の表示">
+                <button type="button" id="tab-preview" role="tab" aria-controls="preview-view" aria-selected="true" data-view="preview">プレビュー</button>
+                <button type="button" id="tab-code" role="tab" aria-controls="code-view" aria-selected="false" data-view="code">コード</button>
+            </div>
+            <div id="preview-view" role="tabpanel" aria-labelledby="tab-preview">
+                <div class="preview-top">
+            <div class="compare guide">
+                <div>
+                    <h3 class="with-toggles">
+                        <span>プレビュー</span>
+                        <span class="toggle-group">
+                            <label><input type="checkbox" id="show-ref" checked autocomplete="off"> 比較対象を表示</label>
+                            <label><input type="checkbox" id="show-guide" checked autocomplete="off"> 版面の左右に線を表示</label>
+                        </span>
+                    </h3>
+                    <div class="sheet" id="after"></div>
+                </div>
+                <div id="ref-col">
+                    <h3 class="with-select">
+                        <span>比較対象</span>
+                        <select id="compare-mode" autocomplete="off">
+                            <option value="text-spacing-trim:space-all">ベタ組み（詰めなし）</option>
+                            <option value="">ブラウザ既定</option>
+                            <option value='font-feature-settings:"palt"'>palt（プロポーショナル字形）</option>
+                            <option value='font-feature-settings:"palt","kern"'>palt + kern</option>
+                            <option value='font-feature-settings:"halt"'>halt（約物を半角に）</option>
+                            <option value='font-feature-settings:"pwid"'>pwid（プロポーショナル幅）</option>
+                            <option value='font-feature-settings:"hwid"'>hwid（半角字形）</option>
+                            <option value='font-feature-settings:"fwid"'>fwid（全角字形）</option>
+                            <option value="font-variant-east-asian:proportional-width">font-variant-east-asian: proportional-width</option>
+                        </select>
+                    </h3>
+                    <div class="sheet" id="before" contenteditable="true" spellcheck="false"></div>
+                    <div class="compare-note" id="compare-note"></div>
+                </div>
+                </div>
+
+                <div class="stat" id="stat"></div>
+                </div>
+            </div>
+
+            <div class="out" id="code-view" role="tabpanel" aria-labelledby="tab-code" hidden>
+                <div class="out-head">
+                    <h3>書き出される CSS</h3>
+                    <div class="out-actions">
+                        <button id="copy">コピー</button>
+                    </div>
+                </div>
+                <pre id="css"></pre>
+            </div>
+        </div>
+    </div>
+
+    <script src="template/sweet-type.js"></script>
+    <!-- フォルダ保存はツール本体へ統合。再利用用の原本は docs/folder-storage.js。 -->
+    <script>
+(function (global) {
+    'use strict';
+
+    class ChromeFolderStorage {
+        constructor(options = {}) {
+            this.dbName = options.dbName || 'chrome-folder-storage';
+            this.dbVersion = options.dbVersion || 1;
+            this.storeName = options.storeName || 'handles';
+            this.handleKey = options.handleKey || 'directory';
+            this.pickerId = options.pickerId || 'workspace';
+            this.directoryHandle = null;
+            this.writeQueue = Promise.resolve();
+        }
+
+        static isSupported() {
+            // IndexedDB が無くても現在のタブ中の読み書きはできる。
+            return typeof global.showDirectoryPicker === 'function';
+        }
+
+        openDb() {
+            return new Promise((resolve, reject) => {
+                if (!global.indexedDB) {
+                    reject(new Error('IndexedDB を利用できません'));
+                    return;
+                }
+                const request = global.indexedDB.open(this.dbName, this.dbVersion);
+                request.onupgradeneeded = () => {
+                    const db = request.result;
+                    if (!db.objectStoreNames.contains(this.storeName)) {
+                        db.createObjectStore(this.storeName);
+                    }
+                };
+                request.onsuccess = () => resolve(request.result);
+                request.onerror = () => reject(request.error || new Error('IndexedDB を開けませんでした'));
+            });
+        }
+
+        async remember(handle) {
+            const db = await this.openDb();
+            try {
+                await new Promise((resolve, reject) => {
+                    const tx = db.transaction(this.storeName, 'readwrite');
+                    tx.objectStore(this.storeName).put(handle, this.handleKey);
+                    tx.oncomplete = () => resolve();
+                    tx.onerror = () => reject(tx.error || new Error('フォルダを記憶できませんでした'));
+                    tx.onabort = () => reject(tx.error || new Error('フォルダの記憶が中断されました'));
+                });
+            } finally {
+                db.close();
+            }
+        }
+
+        async recall() {
+            try {
+                const db = await this.openDb();
+                try {
+                    return await new Promise((resolve, reject) => {
+                        const tx = db.transaction(this.storeName, 'readonly');
+                        const request = tx.objectStore(this.storeName).get(this.handleKey);
+                        request.onsuccess = () => resolve(request.result || null);
+                        request.onerror = () => reject(request.error || new Error('フォルダを復元できませんでした'));
+                    });
+                } finally {
+                    db.close();
+                }
+            } catch (error) {
+                console.warn('保存済みフォルダの復元に失敗しました:', error);
+                return null;
+            }
+        }
+
+        async ensurePermission(handle, requestPermission) {
+            const options = { mode: 'readwrite' };
+            let permission = await handle.queryPermission(options);
+            if (permission !== 'granted' && requestPermission) {
+                permission = await handle.requestPermission(options);
+            }
+            return permission === 'granted';
+        }
+
+        async connect(handle, options = {}) {
+            if (!handle) return false;
+            const granted = await this.ensurePermission(handle, !!options.requestPermission);
+            if (!granted) return false;
+            this.directoryHandle = handle;
+            // IndexedDB の利用に失敗しても、現在のタブでは保存を続けられる。
+            try {
+                await this.remember(handle);
+            } catch (error) {
+                console.warn('フォルダを次回用に記憶できませんでした:', error);
+            }
+            return true;
+        }
+
+        async pick() {
+            if (!ChromeFolderStorage.isSupported()) {
+                throw new Error('このブラウザはフォルダ保存に対応していません（Chrome を使用してください）');
+            }
+            const previous = this.directoryHandle || await this.recall();
+            const options = { id: this.pickerId, mode: 'readwrite' };
+            if (previous) options.startIn = previous;
+            try {
+                return await global.showDirectoryPicker(options);
+            } catch (error) {
+                // 古い Chrome では startIn に保存済みハンドルを渡せない場合がある。
+                if (!(error instanceof TypeError) || !options.startIn) throw error;
+                delete options.startIn;
+                return global.showDirectoryPicker(options);
+            }
+        }
+
+        // 新しい作業フォルダを作るときは、前回の作業フォルダではなく
+        // その親になる場所を選んでもらう。
+        async pickParent() {
+            if (!ChromeFolderStorage.isSupported()) {
+                throw new Error('このブラウザはフォルダ保存に対応していません（Chrome を使用してください）');
+            }
+            return global.showDirectoryPicker({ id: this.pickerId + '-parent', mode: 'readwrite' });
+        }
+
+        async readText(name) {
+            if (!this.directoryHandle) throw new Error('保存先フォルダが未接続です');
+            const handle = await this.directoryHandle.getFileHandle(name, { create: false });
+            return (await handle.getFile()).text();
+        }
+
+        async writeText(name, contents) {
+            if (!this.directoryHandle) throw new Error('保存先フォルダが未接続です');
+            const handle = await this.directoryHandle.getFileHandle(name, { create: true });
+            const writable = await handle.createWritable();
+            try {
+                await writable.write(contents);
+                await writable.close();
+            } catch (error) {
+                try { await writable.abort(); } catch (_) { /* close/abort 済み */ }
+                throw error;
+            }
+        }
+
+        writeFiles(files) {
+            const entries = Object.entries(files);
+            const write = async () => {
+                for (const [name, contents] of entries) {
+                    await this.writeText(name, contents);
+                }
+            };
+            // 前回の失敗でキューを止めず、次の変更は再度保存できるようにする。
+            const pending = this.writeQueue.catch(() => {}).then(write);
+            this.writeQueue = pending;
+            return pending;
+        }
+    }
+
+    global.ChromeFolderStorage = ChromeFolderStorage;
+})(window);
+    </script>
+    <script>
+        const $ = (id) => document.getElementById(id);
+        const before = $('before'), after = $('after'), root = document.documentElement;
+        // Google Fonts のCSSが解析される前に document.fonts.load() を呼ぶと、
+        // 代替書体だけで「読み込み済み」と判定されることがある。
+        function stylesheetReady(link) {
+            if (!link || link.sheet) return Promise.resolve();
+            return new Promise((resolve) => {
+                link.addEventListener('load', resolve, { once: true });
+                // ネットワークエラー時も代替書体で組版を継続する。
+                link.addEventListener('error', resolve, { once: true });
+            });
+        }
+        let webFontStylesheetReady = stylesheetReady($('default-web-fonts'));
+        // file:// で直接開くと Chrome は preview.html の fetch を許可しない。
+        // その場合にも新規案件の既定文が変わらないよう、template/preview.html と
+        // 同じ本文をここにも保持する。HTTP(S) で開いた場合は下の fetch の値を使う。
+        const FALLBACK_PREVIEW_TEXT = `――テキストの「形」に、果たして本当の意味などあるだらうか？
+彼は万年筆を置き、冷め切ったコーヒーを口に含む。「2026年の今日、私たちが試みてゐることは、未だかつて誰も夢みたことのない『構造の再定義』なのだ」。
+B氏が持ち込んだ3冊の古びたノートには、かつての文学者たちが遺した謎めいた暗号――いや、ただのラクガキか――が記されてゐた。「A案を採用するか、それともC案のデータベースレスな手法に特化すべきか」。迷いは深い。だが、時間は容赦なく深夜3時を指し示してゐる。
+――……よし、すべてを一度「破棄」しよう。
+彼は新しいJSONファイルを開き、1からコードを書き直す。キーボードを叩く乾いた音が、静まり返った部屋のなかに響きわたる。「1ピクセルのズレも、1文字の誤謬も、すべてはこの作品の――いや、新しい表現形式のための必然なのだ」。
+外はすでに白み始めている。10個のモジュールが統合され、UIの画面上に静かな光が灯った。それは完成であり、同時に新たな「闘争」の始まりに他ならなかつた。`;
+        const TEMPLATE_FILES = {
+            preview: 'template/preview.html', settings: 'template/settings.json', script: 'template/sweet-type.js'
+        };
+        const textToPreviewHtml = (text) => text.replace(/\r\n?/g, '\n').split('\n')
+            .filter(Boolean).map((line) => `<p>${escapeHtml(line)}</p>`).join('\n');
+        let bundledPreviewHtml = textToPreviewHtml(FALLBACK_PREVIEW_TEXT);
+        let templateSettings = null;
+        let separatorSource = null;
+        function embeddedTemplateScript() {
+            const source = $('embedded-template-sweet-type-js').content.textContent.trim();
+            if (!source) throw new Error('埋め込みテンプレートJSが空です');
+            return source + '\n';
+        }
+        // 案件へ渡すJSは、ツール本体ではなくテンプレート版をコピーする。
+        const separatorSourceReady = fetch(TEMPLATE_FILES.script + '?t=' + Date.now())
+            .then((response) => {
+                if (!response.ok) throw new Error('文字分割JSを読めませんでした');
+                return response.text();
+            })
+            .then((text) => { separatorSource = text; })
+            .catch(() => { separatorSource = embeddedTemplateScript(); });
+        // 「比較対象」欄（#before）に直接ペースト・編集してもらう方式にしたので、
+        // ユーザーが一度でも手を入れたら、あとから preview.html が届いても上書きしない。
+        let previewTextOverride = false;
+
+        function currentPreviewText() {
+            return before.innerText.replace(/\r\n?/g, '\n').replace(/\n$/, '');
+        }
+
+        function escapeHtml(value) {
+            return String(value)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;');
+        }
+
+        // 実際の組み込み方を示す確認ページを作る。
+        function createSampleHtml() {
+            const content = before.innerHTML;
+            return '<!doctype html>\n<html lang="ja">\n<head>\n'
+                + '  <meta charset="UTF-8">\n'
+                + '  <meta name="viewport" content="width=device-width, initial-scale=1.0">\n'
+                + '  <title>文字組サンプル</title>\n'
+                + '  <link rel="stylesheet" href="sweet-type.css">\n'
+                + '  <style>body{margin:32px;color:#111}.sweet-type{width:' + measureWidth() + 'px}.sweet-type p{margin:0 0 1em}.sweet-type p:last-child{margin-bottom:0}</style>\n'
+                + '</head>\n<body>\n'
+                + '  <!-- sweet-type.css と sweet-type.js を読み込んで組版する最小の実装例です。 -->\n'
+                + '  <div class="sweet-type">\n'
+                + content + '\n'
+                + '  </div>\n'
+                + '  <script src="sweet-type.js"><\/script>\n'
+                + '</body>\n</html>\n';
+        }
+
+        function setBeforeText(text) {
+            setBeforeHtml(textToPreviewHtml(text));
+        }
+
+        function setBeforeHtml(html) {
+            before.innerHTML = html;
+            renderText();
+        }
+
+        async function useExternalPreviewHtml(html) {
+            if (previewTextOverride) return false;
+            setBeforeHtml(html);
+            updateStat();
+            return true;
+        }
+
+        fetch(TEMPLATE_FILES.preview + '?t=' + Date.now())
+            .then((response) => {
+                if (!response.ok) throw new Error('テンプレート本文を読めませんでした');
+                return response.text();
+            })
+            .then((text) => {
+                bundledPreviewHtml = text;
+                return useExternalPreviewHtml(bundledPreviewHtml);
+            })
+            .catch(() => {
+                // file:// では選択した作業フォルダから接続時に読む。
+                // 接続前は template/preview.html と同じ既定文を表示する。
+                if (!previewTextOverride && !before.textContent) {
+                    setBeforeText(FALLBACK_PREVIEW_TEXT);
+                    updateStat();
+                }
+            });
+
+        // スライダーの定義：id, CSS変数, 単位, 表示の桁
+        const VARS = [
+            ['target',    '--sweet-type-target',      'em', 2],
+            ['strength',  '--sweet-type-strength',    '',   2],
+            ['max',       '--sweet-type-max',         'em', 2],
+            ['tracking',  '--sweet-type-tracking',    'em', 3],
+            ['autospace', '--sweet-type-autospace',   'em', 3],
+        ];
+
+        const TYPE_SETTINGS = ['kanji', 'hiragana', 'katakana', 'latin', 'yakumono'];
+
+        const BASE_PROFILES = {
+            normal: {
+                feature: 'normal', variant: 'normal', punctuationManual: 0, autoTsume: 1,
+                trim: 'trim-start',
+                hint: '通常字形を実測し、下の約物アキを最終値として適用します。'
+            },
+            halt: {
+                feature: '"halt"', variant: 'normal', punctuationManual: 1, autoTsume: 1,
+                trim: 'space-all',
+                hint: 'halt の半角約物を土台にし、約物アキを追加補正として重ねます。'
+            },
+            palt: {
+                feature: '"palt"', variant: 'normal', punctuationManual: 1, autoTsume: 0,
+                trim: 'space-all', hint: 'palt を土台にします。自動実測ツメは止め、各アキを追加補正として重ねます。'
+            },
+            'palt-kern': {
+                feature: '"palt","kern"', variant: 'normal', punctuationManual: 1, autoTsume: 0,
+                trim: 'space-all', hint: 'palt + kern を土台にします。文字分割のため、ペアカーニングは参考的な扱いです。'
+            },
+            pwid: {
+                feature: '"pwid"', variant: 'normal', punctuationManual: 1, autoTsume: 0,
+                trim: 'space-all', hint: 'pwid を土台にし、文字種別・約物のアキを追加補正として重ねます。'
+            },
+            hwid: {
+                feature: '"hwid"', variant: 'normal', punctuationManual: 1, autoTsume: 0,
+                trim: 'space-all', hint: 'hwid を土台にし、文字種別・約物のアキを追加補正として重ねます。'
+            },
+            fwid: {
+                feature: '"fwid"', variant: 'normal', punctuationManual: 1, autoTsume: 0,
+                trim: 'space-all', hint: 'fwid を土台にし、文字種別・約物のアキを追加補正として重ねます。'
+            },
+            'proportional-width': {
+                feature: 'normal', variant: 'proportional-width', punctuationManual: 1, autoTsume: 0,
+                trim: 'space-all', hint: 'proportional-width を土台にし、各アキを追加補正として重ねます。'
+            }
+        };
+
+        function baseProfile() {
+            return BASE_PROFILES[$('base-mode').value] || BASE_PROFILES.normal;
+        }
+
+        function populateTypeFontOptions() {
+            const baseOptions = [...$('font').options];
+            TYPE_SETTINGS.forEach((type) => {
+                const select = $('type-' + type + '-font');
+                select.add(new Option('ベースを継承', ''));
+                baseOptions.forEach((option) => select.add(new Option(option.textContent, option.value)));
+            });
+        }
+        populateTypeFontOptions();
+
+        // 約物のアキ。InDesign の文字組みアキ量設定と同じく、
+        // どの約物のどちら側かで 12 通り＋約物どうしの 1 通り
+        const AKI = [
+            'open-before', 'open-after', 'close-before', 'close-after',
+            'kuten-before', 'kuten-after', 'touten-before', 'touten-after',
+            'nakaten-before', 'nakaten-after', 'bang-before', 'bang-after',
+            'yakumono-pair', 'eol-yakumono',
+        ];
+
+        // 並びは AKI と同じ
+        const PRESETS = {
+            // 「ベタ_A」＝ JIS のベタ組み。約物の外側に二分アキが入る
+            beta: [0.5, 0, 0, 0.5, 0, 0.5, 0, 0.5, 0.25, 0.25, 0, 0.5, 0.5, 0],
+            // 約物半角。アキをいっさい取らない
+            hankaku: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        };
+
+        // ---- IDML から文字組みアキ量設定を読み込む --------------------
+        //
+        // IDML は ZIP + XML の公開形式で、designmap.xml に <MojikumiTable> が入っている。
+        // ZIP は DecompressionStream('deflate-raw') で展開できるので、外部ライブラリは要らない。
+        async function readZipEntry(buf, wanted) {
+            const dv = new DataView(buf);
+            let eocd = -1;
+            for (let i = buf.byteLength - 22; i >= 0 && i > buf.byteLength - 22 - 65536; i--) {
+                if (dv.getUint32(i, true) === 0x06054b50) { eocd = i; break; }
+            }
+            if (eocd < 0) throw new Error('ZIP として読めませんでした');
+
+            const count = dv.getUint16(eocd + 10, true);
+            let off = dv.getUint32(eocd + 16, true);
+            const dec = new TextDecoder();
+
+            for (let i = 0; i < count; i++) {
+                const method = dv.getUint16(off + 10, true);
+                const compSize = dv.getUint32(off + 20, true);
+                const nameLen = dv.getUint16(off + 28, true);
+                const extraLen = dv.getUint16(off + 30, true);
+                const commentLen = dv.getUint16(off + 32, true);
+                const localOff = dv.getUint32(off + 42, true);
+                const name = dec.decode(new Uint8Array(buf, off + 46, nameLen));
+
+                if (name === wanted) {
+                    const lnLen = dv.getUint16(localOff + 26, true);
+                    const leLen = dv.getUint16(localOff + 28, true);
+                    const data = new Uint8Array(buf, localOff + 30 + lnLen + leLen, compSize);
+                    if (method === 0) return dec.decode(data);
+                    const stream = new Blob([data]).stream()
+                        .pipeThrough(new DecompressionStream('deflate-raw'));
+                    return dec.decode(await new Response(stream).arrayBuffer());
+                }
+                off += 46 + nameLen + extraLen + commentLen;
+            }
+            throw new Error(wanted + ' が見つかりませんでした');
+        }
+
+        // InDesign の文字クラス番号。同梱の IDML の「ベタ_A」を JIS のベタ組みと
+        // 突き合わせて割り出した（始め括弧の前＝二分、中点の前後＝四分、など）。
+        const IDML_TEXT_CLASS = 3;   // 相手側にとる「ふつうの和文」
+        const IDML_LATIN_CLASS = 18; // 相手側にとる欧文
+        const IDML_MAP = [
+            ['open-before', 1, false], ['open-after', 1, true],
+            ['close-before', 2, false], ['close-after', 2, true],
+            ['kuten-before', 6, false], ['kuten-after', 6, true],
+            ['touten-before', 21, false], ['touten-after', 21, true],
+            ['nakaten-before', 5, false], ['nakaten-after', 5, true],
+            ['bang-before', 31, false], ['bang-after', 31, true],
+        ];
+
+        function parseMojikumiTables(xml) {
+            const doc = new DOMParser().parseFromString(xml, 'application/xml');
+            const out = [];
+            for (const table of doc.querySelectorAll('MojikumiTable')) {
+                const rows = table.querySelectorAll('OverrideMojikumiAkiType');
+                if (!rows.length) continue;   // 名前だけの既定テーブルは飛ばす
+                const aki = new Map();
+                for (const r of rows) {
+                    const key = [
+                        r.getAttribute('TargetMojikumiClass'),
+                        r.getAttribute('SideMojikumiClass'),
+                        r.getAttribute('SideIsAfterTarget'),
+                    ].join('/');
+                    aki.set(key, Number(r.getAttribute('Desired')));
+                }
+                const get = (t, side, after) => aki.get(`${t}/${side}/${after}`);
+                const values = {};
+                for (const [name, cls, after] of IDML_MAP) {
+                    const v = get(cls, IDML_TEXT_CLASS, after);
+                    if (v !== undefined) values[name] = v;
+                }
+                const autospace = get(IDML_TEXT_CLASS, IDML_LATIN_CLASS, true);
+                out.push({
+                    name: table.getAttribute('Name') || '(無名)',
+                    values,
+                    autospace,
+                });
+            }
+            return out;
+        }
+
+        let idmlTables = [];
+
+        async function loadIdml(file) {
+            const result = $('idml-result');
+            result.textContent = '読み込み中…';
+            try {
+                const buf = await file.arrayBuffer();
+                const xml = await readZipEntry(buf, 'designmap.xml');
+                idmlTables = parseMojikumiTables(xml);
+                if (!idmlTables.length) throw new Error('文字組みアキ量設定が入っていませんでした');
+
+                // 読み込んだテーブルをプリセットの選択肢に足す
+                [...$('preset').options].forEach((o) => { if (o.dataset.idml) o.remove(); });
+                idmlTables.forEach((t, i) => {
+                    const o = new Option('IDML: ' + t.name, 'idml-' + i);
+                    o.dataset.idml = '1';
+                    $('preset').add(o, 0);
+                });
+                $('preset').value = 'idml-0';
+                setPreset('idml-0');
+                result.innerHTML = `<b>${idmlTables.length} 件</b>読み込みました：` +
+                    idmlTables.map((t) => t.name).join('、');
+            } catch (e) {
+                result.textContent = '読み込めませんでした：' + e.message;
+            }
+        }
+
+        const akiVar = (name) => '--sweet-type-' + name;
+
+        function applyAki() {
+            AKI.forEach((name) => {
+                root.style.setProperty(akiVar(name), $('a-' + name).value + 'em');
+            });
+            updateOutput();
+        }
+
+        function setPreset(key) {
+            if ([...$('preset').options].some((option) => option.value === key)) $('preset').value = key;
+            if (key.startsWith('idml-')) {
+                const t = idmlTables[Number(key.slice(5))];
+                if (!t) return;
+                // IDML に無い項目（約物どうしなど）は今の値のまま残す
+                AKI.forEach((name) => {
+                    if (t.values[name] !== undefined) $('a-' + name).value = t.values[name];
+                });
+                if (t.autospace !== undefined) {
+                    $('autospace').value = t.autospace;
+                    applyVars();
+                }
+            } else {
+                PRESETS[key].forEach((v, i) => { $('a-' + AKI[i]).value = v; });
+            }
+            applyAki();
+        }
+
+        // #before（比較対象欄）が本文の唯一の入力源。ここでは読み取るだけで、書き込まない
+        // （ユーザーが編集中に書き戻すとカーソル位置が飛ぶため）。
+        function renderText() {
+            try { SweetType.restore(after); }
+            catch (_) { after.replaceChildren(); }
+            after.innerHTML = before.innerHTML;
+            try { SweetType.apply(after); }
+            catch (e) { console.error('プレビューを調整できませんでした', e); }
+            applyCompareMode();
+        }
+
+        // 参考欄に、CSS の既定の詰め設定（palt など）を掛けて見比べられるようにする
+        function applyCompareMode() {
+            const css = $('compare-mode').value;
+            before.style.cssText = before.style.cssText
+                .replace(/font-feature-settings:[^;]*;?/g, '')
+                .replace(/font-variant-east-asian:[^;]*;?/g, '')
+                .replace(/text-spacing-trim:[^;]*;?/g, '');
+            if (css) before.style.cssText += ';' + css;
+
+            // その書体でその機能が実際に効くか実測して知らせる
+            const probe = (style) => {
+                const d = document.createElement('div');
+                d.style.cssText = 'position:absolute;visibility:hidden;white-space:nowrap;'
+                    + `font:${$('size').value}px ${$('font').value};` + style;
+                d.textContent = currentPreviewText();
+                document.body.appendChild(d);
+                const w = d.getBoundingClientRect().width;
+                d.remove();
+                return w;
+            };
+            const beta = probe('text-spacing-trim:space-all');
+            const now = probe(css);
+            const mine = after.getBoundingClientRect().width && (() => {
+                let t = 0;
+                after.querySelectorAll('[data-sweet-type-span]').forEach((s) => {
+                    t += parseFloat(getComputedStyle(s).marginRight) || 0;
+                });
+                return t;
+            })();
+
+            const pct = (v) => (v / beta * 100).toFixed(1) + '%';
+            const label = $('compare-mode').selectedOptions[0].textContent;
+            // 「効かない」と言えるのは書体の機能を指定したときだけ。
+            // ベタ組みやブラウザ既定は、変化がなくても異常ではない
+            const isFontFeature = /font-feature-settings|font-variant-east-asian/.test(css);
+            const dead = isFontFeature && Math.abs(now - beta) < 0.5;
+            $('compare-note').innerHTML =
+                `参考「${label}」はベタ組みより <b>${pct(now - beta)}</b>、` +
+                `この設定は <b>${pct(mine)}</b>。` +
+                (dead ? '<br>※ いまの書体はこの機能を持っていないため、見た目が変わりません。' : '');
+        }
+
+        function measureUnit() {
+            return document.querySelector('input[name="measure-unit"]:checked').value;
+        }
+
+        // 文字数指定とピクセル指定を行き来しても、見た目の幅が変わらないよう換算する。
+        // 単位が実際に変わったときだけ換算する（初期化時に走らせると値が壊れる）
+        let lastUnit = 'cols';
+
+        function syncMeasureRange() {
+            const unit = measureUnit();
+            if (unit === lastUnit) return;
+            const size = Number($('size').value);
+            const input = $('measure');
+            const current = Number(input.value);
+            if (unit === 'px') {
+                input.min = 120; input.max = 1400; input.step = 1;
+                input.value = Math.round(current * size);
+            } else {
+                input.min = 10; input.max = 45; input.step = 1;
+                input.value = Math.max(10, Math.min(45, Math.round(current / size)));
+            }
+            lastUnit = unit;
+        }
+
+        function measureWidth() {
+            const size = Number($('size').value);
+            const v = Number($('measure').value);
+            const px = measureUnit() === 'px' ? v : v * size;
+            const cols = px / size;
+            $('o-measure').textContent = measureUnit() === 'px'
+                ? `${Math.round(px)}px（${cols.toFixed(1)}字）`
+                : `${v}字（${Math.round(px)}px）`;
+            // 数値入力欄はスライダーと同じ単位・同じ値をそのまま映す
+            if (document.activeElement !== $('measure-number')) $('measure-number').value = v;
+            return px;
+        }
+
+        // 数値欄に直接入力したときは、スライダーへ値を反映する（上限を超えたらスライダー側を伸ばす）
+        function syncMeasureRangeFromNumber() {
+            const v = Number($('measure-number').value);
+            if (!Number.isFinite(v) || v <= 0) return;
+            if (v > Number($('measure').max)) $('measure').max = v;
+            if (v < Number($('measure').min)) $('measure').min = v;
+            $('measure').value = v;
+        }
+
+        async function applyLayout() {
+            const size = $('size').value, lh = $('lh').value, font = $('font').value;
+            const width = measureWidth();
+            for (const el of [before, after]) {
+                el.style.fontFamily = font;
+                el.style.fontSize = size + 'px';
+                el.style.lineHeight = lh;
+                el.style.width = width + 'px';
+            }
+            $('o-lh').textContent = lh;
+
+            // ウェブフォントは読み込みが終わるまで代替書体で測ってしまうので、
+            // 実際に使う字を指定して読み込みを待ってから測りなおす
+            await webFontStylesheetReady;
+            if (document.fonts) {
+                try {
+                    await document.fonts.load(`${size}px ${font}`, 'あ漢ア「」。、・！？A1');
+                    await document.fonts.ready;
+                } catch (e) { /* 書体名が不正でも組版は続ける */ }
+            }
+            // 書体が変われば字面も変わるので測りなおす
+            renderText();
+        }
+
+        function typeWeight(type) {
+            const v = Number($('type-' + type + '-weight').value);
+            return v === 0 ? 'inherit' : String(v);
+        }
+
+        function applyBaseVars() {
+            const profile = baseProfile();
+            root.style.setProperty('--sweet-type-base-feature', profile.feature);
+            root.style.setProperty('--sweet-type-base-variant', profile.variant);
+            root.style.setProperty('--sweet-type-base-halt', profile.punctuationManual ? '1' : '0');
+            root.style.setProperty('--sweet-type-punctuation-manual', String(profile.punctuationManual));
+            root.style.setProperty('--sweet-type-auto-tsume', String(profile.autoTsume));
+            root.style.setProperty('--sweet-type-spacing-trim', profile.trim);
+            $('base-mode-hint').textContent = profile.hint;
+            // 目標のアキ・詰めの強度・詰めの上限は、約物詰め内の「字形のベース」が
+            // 実測ツメ／halt 以外のときは数式上まったく効かなくなる（--sweet-type-auto-tsume が 0 のため）。
+            // 以前はここで disabled にしていたが、原因（字形のベース）と結果（この 3 つ）が
+            // 別々の開閉セクションに離れていて、なぜ動かないか分からず「壊れた」ように見えていた。
+            // 触れるようにしたまま、効いていないことだけをその場で伝える。
+            $('tsume-inert-note').hidden = !!profile.autoTsume;
+        }
+
+        // ベースの太さ。0 は「指定しない」の意味で、ページ側の既定（通常 400）をそのまま継承する
+        function baseWeightValue() {
+            const v = Number($('base-weight').value);
+            return v === 0 ? 'inherit' : String(v);
+        }
+
+        function applyBaseWeight() {
+            root.style.setProperty('--sweet-type-base-weight', baseWeightValue());
+        }
+
+        function applyTypeVars() {
+            TYPE_SETTINGS.forEach((type) => {
+                const prefix = 'type-' + type + '-';
+                root.style.setProperty('--sweet-type-' + type + '-font', $(prefix + 'font').value || 'inherit');
+                root.style.setProperty('--sweet-type-' + type + '-scale', $(prefix + 'scale').value);
+                root.style.setProperty('--sweet-type-' + type + '-weight', typeWeight(type));
+                root.style.setProperty('--sweet-type-' + type + '-spacing', $(prefix + 'spacing').value + 'em');
+            });
+        }
+
+        function applyVars() {
+            for (const [id, name, unit, digits] of VARS) {
+                const v = $(id).value;
+                root.style.setProperty(name, v + unit);
+                $('o-' + id).textContent = (unit ? Number(v).toFixed(digits) + unit : v);
+            }
+            updateOutput();
+        }
+
+        // 出力する CSS は template/sweet-type.css を読み込み、:root の値だけ差し替える。
+        let baseCss = null;
+
+        // プレビューにも、書き出す CSS にも、同じテンプレートCSSを使う。
+        // file:// では fetch が拒否されるが、link は Chrome が読める。そのため
+        // link の CSSOM からもCSS本文を取り出せるようにする。
+        function linkedTemplateCss() {
+            const link = $('template-sweet-type-css');
+            const serialize = () => {
+                const sheet = link.sheet;
+                if (!sheet) throw new Error('テンプレートCSSを読み込めませんでした');
+                const text = Array.from(sheet.cssRules, (rule) => rule.cssText).join('\n');
+                if (!text) throw new Error('テンプレートCSSが空です');
+                return text;
+            };
+            try { return Promise.resolve(serialize()); }
+            catch (_) {
+                // sheet があるのに cssRules を読めない場合は、load 済みだが
+                // file:// の同一生成元制限に当たっている。イベントを待たず予備版へ進む。
+                if (link.sheet) return Promise.reject(new Error('テンプレートCSSのCSSOMへアクセスできませんでした'));
+                return new Promise((resolve, reject) => {
+                    link.addEventListener('load', () => {
+                        try { resolve(serialize()); } catch (e) { reject(e); }
+                    }, { once: true });
+                    link.addEventListener('error', () => reject(new Error('テンプレートCSSを読み込めませんでした')), { once: true });
+                });
+            }
+        }
+
+        function embeddedTemplateCss() {
+            const source = $('embedded-template-sweet-type-css').content.textContent.trim();
+            if (!source) throw new Error('埋め込みテンプレートCSSが空です');
+            return source + '\n';
+        }
+
+        async function installBaseCss(text) {
+            baseCss = text;
+            // link で先に表示しているルールを、ここからは同じ内容の style に一本化する。
+            $('template-sweet-type-css').disabled = true;
+            let style = $('sweet-type-css');
+            if (!style) {
+                style = document.createElement('style');
+                style.id = 'sweet-type-css';
+                document.head.insertBefore(style, document.head.firstChild);
+            }
+            style.textContent = text;
+            applyVars();
+            applyBaseVars();
+            applyBaseWeight();
+            applyTypeVars();
+            // 保存用CSSはフォント読込を待たず、ここで直ちに準備する。
+            updateOutput();
+            await applyLayout();
+            updateOutput();
+        }
+
+        const baseCssReady = fetch('template/sweet-type.css?t=' + Date.now())
+            .then((r) => {
+                if (!r.ok) throw new Error('テンプレートCSSを読めませんでした');
+                return r.text();
+            })
+            .then(installBaseCss)
+            .catch(() => linkedTemplateCss().then(installBaseCss)
+                .catch(() => installBaseCss(embeddedTemplateCss())))
+            .catch(() => { baseCss = false; updateOutput(); });
+
+        function currentVars() {
+            const profile = baseProfile();
+            const v = [
+                ['--sweet-type-font-family', $('font').value],
+                ['--sweet-type-font-size', $('size').value + 'px'],
+                ['--sweet-type-line-height', $('lh').value],
+                ['--sweet-type-target', $('target').value + 'em'],
+                ['--sweet-type-strength', $('strength').value],
+                ['--sweet-type-max', $('max').value + 'em'],
+                ['--sweet-type-tracking', $('tracking').value + 'em'],
+                ['--sweet-type-autospace', $('autospace').value + 'em'],
+                ['--sweet-type-base-feature', profile.feature],
+                ['--sweet-type-base-variant', profile.variant],
+                ['--sweet-type-base-halt', profile.punctuationManual ? '1' : '0'],
+                ['--sweet-type-punctuation-manual', String(profile.punctuationManual)],
+                ['--sweet-type-auto-tsume', String(profile.autoTsume)],
+                ['--sweet-type-spacing-trim', profile.trim],
+                ['--sweet-type-base-weight', baseWeightValue()],
+            ];
+            TYPE_SETTINGS.forEach((type) => {
+                const prefix = 'type-' + type + '-';
+                v.push(['--sweet-type-' + type + '-font', $(prefix + 'font').value || 'inherit']);
+                v.push(['--sweet-type-' + type + '-scale', $(prefix + 'scale').value]);
+                v.push(['--sweet-type-' + type + '-weight', typeWeight(type)]);
+                v.push(['--sweet-type-' + type + '-spacing', $(prefix + 'spacing').value + 'em']);
+            });
+            AKI.forEach((name) => v.push([akiVar(name), $('a-' + name).value + 'em']));
+            return v;
+        }
+
+        function updateOutput() {
+            if (baseCss === null) { $('css').textContent = '読み込み中…'; return; }
+            if (baseCss === false) {
+                $('css').textContent =
+                    '/* sweet-type.css を読めませんでした。\n' +
+                    '   下の値を sweet-type.css の :root に書き写してください */\n:root {\n' +
+                    currentVars().map(([n, val]) => `    ${n}: ${val};`).join('\n') + '\n}\n';
+                updateStat();
+                // file:// で CSS の fetch が失敗しても、設定とフォールバック CSS は保存する。
+                scheduleSave();
+                return;
+            }
+
+            let css = baseCss;
+            for (const [name, value] of currentVars()) {
+                // :root の宣言だけを狙う（var(--sweet-type-…) には : が続かないので当たらない）
+                css = css.replace(new RegExp('(\\' + name + ':\\s*)[^;]*;'), '$1' + value + ';');
+            }
+            $('css').textContent = css;
+            updateStat();
+            scheduleSave();
+        }
+
+        function updateStat() {
+            const spans = after.querySelectorAll('[data-sweet-type-span]');
+            let tsume = 0;
+            spans.forEach(s => { tsume += parseFloat(getComputedStyle(s).marginRight) || 0; });
+            // ベタ組みでの幅を測って比率を出す
+            const probe = document.createElement('div');
+            probe.style.cssText = 'position:absolute;visibility:hidden;white-space:nowrap';
+            probe.style.font = getComputedStyle(before).font;
+            const statText = currentPreviewText();
+            probe.textContent = statText;
+            document.body.appendChild(probe);
+            const flat = probe.getBoundingClientRect().width;
+            probe.remove();
+            const beforeLines = Math.round(before.getBoundingClientRect().height / parseFloat(getComputedStyle(before).lineHeight));
+            const afterLines = Math.round(after.getBoundingClientRect().height / parseFloat(getComputedStyle(after).lineHeight));
+            $('stat').innerHTML =
+                `文字数 <b>${[...statText].length}</b> ／ span 数 <b>${spans.length}</b> ／ ` +
+                `詰め量 <b>${(-tsume / flat * 100).toFixed(2)}%</b>（ベタ組み比） ／ ` +
+                `行数 <b>${beforeLines}</b> → <b>${afterLines}</b>`;
+        }
+
+        // ------- 配線 -------
+        // 「比較対象」欄に直接ペースト・入力できる。ここが本文の入力源になる
+        before.addEventListener('input', () => {
+            previewTextOverride = true;
+            renderText(); updateStat();
+        });
+        before.addEventListener('paste', (e) => {
+            e.preventDefault();
+            const text = (e.clipboardData || window.clipboardData).getData('text/plain');
+            document.execCommand('insertText', false, text);
+        });
+        $('show-ref').addEventListener('change', (e) => {
+            $('ref-col').hidden = !e.target.checked;
+            scheduleSave();
+        });
+        ['size', 'lh', 'measure'].forEach(id => $(id).addEventListener('input', () => { applyLayout(); updateOutput(); }));
+        $('measure-number').addEventListener('input', () => { syncMeasureRangeFromNumber(); applyLayout(); updateOutput(); });
+        document.querySelectorAll('input[name="measure-unit"]').forEach((r) =>
+            r.addEventListener('change', () => { syncMeasureRange(); applyLayout(); updateOutput(); }));
+        $('font').addEventListener('change', () => { applyLayout(); updateOutput(); });
+        $('compare-mode').addEventListener('change', () => { applyCompareMode(); scheduleSave(); });
+        $('show-guide').addEventListener('change', (e) => {
+            document.querySelector('.compare').classList.toggle('guide', e.target.checked);
+            scheduleSave();
+        });
+        VARS.forEach(([id]) => $(id).addEventListener('input', applyVars));
+        TYPE_SETTINGS.forEach((type) => {
+            ['font', 'scale', 'weight', 'spacing'].forEach((field) => {
+                $("type-" + type + "-" + field).addEventListener('input', async () => {
+                    applyTypeVars();
+                    await applyLayout();
+                    updateOutput();
+                });
+            });
+        });
+        $('base-mode').addEventListener('change', async () => {
+            applyBaseVars();
+            setPreset($('base-mode').value === 'normal' ? 'beta' : 'hankaku');
+            await applyLayout();
+            updateOutput();
+        });
+        $('base-weight').addEventListener('input', async () => {
+            applyBaseWeight();
+            await applyLayout();
+            updateOutput();
+        });
+
+        function setRightView(view) {
+            const showCode = view === 'code';
+            $('preview-view').hidden = showCode;
+            $('code-view').hidden = !showCode;
+            $('tab-preview').setAttribute('aria-selected', String(!showCode));
+            $('tab-code').setAttribute('aria-selected', String(showCode));
+        }
+        document.querySelectorAll('.view-tabs [data-view]').forEach((button) => {
+            button.addEventListener('click', () => setRightView(button.dataset.view));
+        });
+        AKI.forEach((name) => $('a-' + name).addEventListener('input', applyAki));
+        $('preset').addEventListener('change', (e) => setPreset(e.target.value));
+        $('idml').addEventListener('change', (e) => { if (e.target.files[0]) loadIdml(e.target.files[0]); });
+
+        function prepareWebFont(url, family) {
+            if (url) {
+                let link = [...document.querySelectorAll('link[rel="stylesheet"]')]
+                    .find((item) => item.href === new URL(url, location.href).href);
+                if (!link) {
+                    link = document.createElement('link');
+                    link.rel = 'stylesheet';
+                    link.href = url;
+                    document.head.appendChild(link);
+                }
+                webFontStylesheetReady = stylesheetReady(link);
+            }
+            const value = `"${family}", serif`;
+            if (![...$('font').options].some((o) => o.value === value)) {
+                $('font').add(new Option(family + '（追加）', value), 0);
+                TYPE_SETTINGS.forEach((type) => {
+                    $('type-' + type + '-font').add(new Option(family + '（追加）', value), 1);
+                });
+            }
+            return value;
+        }
+
+        // 貼り付けられたテキストから、実際に使う CSS の URL と書体名を取り出す。
+        // ・裸の URL
+        // ・<link href="..." rel="stylesheet"> タグ 1 行
+        // ・Google Fonts が配布する複数行スニペット（preconnect 2 行 + stylesheet 1 行）
+        // のどれで貼っても、family= を含む「本体」の URL だけを拾う。
+        // 手入力のフォント名を別途持たせると、URL とズレて「読み込めるが効かない」原因になるため、
+        // 書体名は常にこの URL から機械的に導く（情報源を URL の一つに絞る）。
+        function parseWebFontInput(raw) {
+            const urls = [...raw.matchAll(/https?:\/\/[^\s"'<>]+/g)].map((m) => m[0]);
+            const url = urls.find((u) => /[?&]family=/.test(u)) || urls[urls.length - 1] || null;
+            if (!url) return { url: null, family: null };
+            let family = null;
+            try {
+                const familyParam = new URL(url).searchParams.get('family');
+                if (familyParam) family = familyParam.split(':')[0].replace(/\+/g, ' ').trim();
+            } catch (_) { /* URL として不正 */ }
+            return { url, family };
+        }
+
+        // 任意のウェブフォントを読み込む（URL だけを入力させ、書体名は URL から自動で取り出す）
+        $('wf-load').addEventListener('click', async () => {
+            const result = $('wf-result');
+            const { url, family } = parseWebFontInput($('wf-url').value);
+            if (!url) { result.textContent = 'URL が見つかりませんでした。'; return; }
+            if (!family) {
+                result.textContent = 'URL から書体名を取り出せませんでした（family= を含む Google Fonts の CSS URL に対応しています）。';
+                return;
+            }
+            $('wf-url').value = url; // 貼り付けたスニペットではなく、実際に使う URL だけを残す
+            const value = prepareWebFont(url, family);
+            $('font').value = value;
+            result.textContent = `「${family}」を読み込みました。`;
+            await applyLayout();
+            updateOutput();
+        });
+
+        $('copy').addEventListener('click', async () => {
+            try {
+                await navigator.clipboard.writeText($('css').textContent);
+                $('copy').textContent = 'コピーしました';
+            } catch (e) {
+                // クリップボードが使えない環境では選択状態にする
+                const r = document.createRange();
+                r.selectNodeContents($('css'));
+                const sel = getSelection(); sel.removeAllRanges(); sel.addRange(r);
+                $('copy').textContent = '選択しました';
+            }
+            setTimeout(() => { $('copy').textContent = 'コピー'; }, 1600);
+        });
+
+        $('save-css').addEventListener('click', async () => {
+            const button = $('save-css');
+            try {
+                if (!dirHandle) {
+                    const handle = await folderStorage.pick();
+                    const connected = await connectDir(handle, { ask: true });
+                    if (!connected) return;
+                }
+                const cssText = $('css').textContent;
+                if (baseCss === false || cssText.startsWith('/* sweet-type.css を読めませんでした')
+                    || !cssText.includes(':root') || !cssText.includes('[data-sweet-type-span]')) {
+                    throw new Error('CSS本体を読み込めていないため保存を中止しました');
+                }
+                clearTimeout(saveTimer);
+                saveTimer = null;
+                button.disabled = true;
+                await separatorSourceReady;
+                const files = {
+                    [SAVE_FILES.settings]: JSON.stringify(
+                        { ...collectSettings(), _snapshots: sanitizedSnapshots(snapshots) }, null, 2) + '\n',
+                    [SAVE_FILES.css]: cssText
+                };
+                files[SAVE_FILES.script] = separatorSource;
+                files[SAVE_FILES.sample] = createSampleHtml();
+                await folderStorage.writeFiles(files);
+                const t = new Date().toLocaleTimeString('ja-JP');
+                setStatus(`${dirHandle.name} にCSS・SweetType・見本を保存しました（${t}）`, true);
+                button.textContent = '保存しました';
+            } catch (e) {
+                if (e.name !== 'AbortError') setStatus('CSSを保存できませんでした：' + e.message);
+            }
+            button.disabled = false;
+            setTimeout(() => { button.textContent = 'CSSを保存'; }, 1600);
+        });
+
+
+        // ================================================================
+        // 保存先フォルダ（File System Access API・Chrome 前提）
+        //
+        // 一度フォルダを選ぶと、そのハンドルを IndexedDB に覚えておく。
+        // 次に開いたときは権限が残っていれば自動でつながり、切れていれば
+        // 「前回のフォルダに再接続」を押してもらう（権限の要求には
+        // ユーザー操作が要るため、自動では復帰できない）。
+        // ================================================================
+        const SAVE_FILES = {
+            css: 'sweet-type.css', settings: 'settings.json', preview: 'preview.html',
+            script: 'sweet-type.js', sample: 'sample.html'
+        };
+        const folderStorage = new ChromeFolderStorage({
+            dbName: 'sweet-type-tool',
+            storeName: 'handles',
+            handleKey: 'dir',
+            pickerId: 'sweet-type-tool'
+        });
+        let dirHandle = null;
+        let saveTimer = null;
+        let defaultSettings = null;
+        const templateSettingsReady = fetch(TEMPLATE_FILES.settings + '?t=' + Date.now())
+            .then((response) => {
+                if (!response.ok) throw new Error('テンプレート設定を読めませんでした');
+                return response.json();
+            })
+            .then((settings) => { templateSettings = withoutPreviewText(settings); })
+            .catch(() => { templateSettings = null; });
+
+        function setStatus(text, ok) {
+            const el = $('save-status');
+            el.textContent = text;
+            if (ok) el.setAttribute('data-ok', ''); else el.removeAttribute('data-ok');
+        }
+
+        // いまの設定をひとまとめにする（保存と読み込みで同じ形を使う）
+        function collectSettings() {
+            const v = {};
+            ['font', 'size', 'lh', 'measure', 'wf-url', 'compare-mode', 'base-mode', 'base-weight']
+                .forEach((id) => { v[id] = $(id).value; });
+            v._schemaVersion = 3;
+            v['measure-unit'] = measureUnit();
+            v['show-guide'] = $('show-guide').checked;
+            v['show-ref'] = $('show-ref').checked;
+            VARS.forEach(([id]) => { v[id] = $(id).value; });
+            TYPE_SETTINGS.forEach((type) => {
+                ['font', 'scale', 'weight', 'spacing'].forEach((field) => {
+                    const id = 'type-' + type + '-' + field;
+                    v[id] = $(id).value;
+                });
+            });
+            AKI.forEach((name) => { v['a-' + name] = $('a-' + name).value; });
+            return v;
+        }
+
+        // プレビュー本文は preview.html または現在の入力欄だけで扱い、
+        // 設定JSON（古いスナップショットを含む）には残さない。
+        function withoutPreviewText(settings) {
+            const clean = { ...(settings || {}) };
+            delete clean.text;
+            delete clean._previewTextSource;
+            return clean;
+        }
+
+        function sanitizedSnapshots(value) {
+            return Object.fromEntries(Object.entries(value || {}).map(
+                ([name, settings]) => [name, withoutPreviewText(settings)]
+            ));
+        }
+
+        async function applySettings(v) {
+            AKI.forEach((name) => { if (v['a-' + name] !== undefined) $('a-' + name).value = v['a-' + name]; });
+            VARS.forEach(([id]) => { if (v[id] !== undefined) $(id).value = v[id]; });
+            ['size', 'lh', 'wf-url', 'compare-mode', 'base-mode', 'base-weight'].forEach((id) => {
+                if (v[id] !== undefined) $(id).value = v[id];
+            });
+            // 保存済みURLも復元時に読み込み直す。URLを覚えるだけでは、リロード後に
+            // 選択肢だけ残って実際のウェブフォントがない状態になってしまう。
+            if (v['wf-url']) {
+                const { url, family } = parseWebFontInput(v['wf-url']);
+                if (url && family) prepareWebFont(url, family);
+            }
+            // 旧形式（手入力の書体名）で保存された設定との互換用。新規保存では書き出さない
+            if (v['wf-family']) prepareWebFont(v['wf-url'] || '', v['wf-family']);
+            if (v.font !== undefined) $('font').value = v.font;
+            TYPE_SETTINGS.forEach((type) => {
+                ['font', 'scale', 'weight', 'spacing'].forEach((field) => {
+                    const id = 'type-' + type + '-' + field;
+                    if (v[id] !== undefined) $(id).value = v[id];
+                });
+            });
+            // 旧設定の欧文スケール／ウェイトを新しい英数字設定へ移す。
+            if (v['type-latin-scale'] === undefined && v.latin !== undefined) $('type-latin-scale').value = v.latin;
+            if (v['type-latin-weight'] === undefined && v['latin-weight'] !== undefined) $('type-latin-weight').value = v['latin-weight'];
+            if (v['show-guide'] !== undefined) {
+                $('show-guide').checked = !!v['show-guide'];
+                document.querySelector('.compare').classList.toggle('guide', !!v['show-guide']);
+            }
+            if (v['show-ref'] !== undefined) {
+                $('show-ref').checked = !!v['show-ref'];
+                $('ref-col').hidden = !v['show-ref'];
+            }
+            if (v['measure-unit']) {
+                const radio = document.querySelector(`input[name="measure-unit"][value="${v['measure-unit']}"]`);
+                if (radio) { radio.checked = true; lastUnit = v['measure-unit']; }
+            }
+            if (v.measure !== undefined) {
+                const input = $('measure');
+                if (v['measure-unit'] === 'px') { input.min = 120; input.max = 1400; input.step = 1; }
+                input.value = v.measure;
+            }
+            applyBaseVars();
+            applyBaseWeight();
+            applyTypeVars();
+            applyAki();
+            applyVars();
+            await applyLayout();
+            updateOutput();
+        }
+
+        async function saveNow() {
+            if (!dirHandle) return;
+            try {
+                await separatorSourceReady;
+                const files = {
+                    [SAVE_FILES.settings]: JSON.stringify(
+                        { ...collectSettings(), _snapshots: sanitizedSnapshots(snapshots) }, null, 2) + '\n'
+                };
+                // CSS本体を読めなかった状態の短い代替表示で、既存ファイルを上書きしない。
+                if (baseCss !== false && !$('css').textContent.startsWith('/* sweet-type.css を読めませんでした')) {
+                    files[SAVE_FILES.css] = $('css').textContent;
+                    files[SAVE_FILES.script] = separatorSource;
+                    files[SAVE_FILES.sample] = createSampleHtml();
+                }
+                await folderStorage.writeFiles(files);
+                const t = new Date().toLocaleTimeString('ja-JP');
+                setStatus(baseCss === false
+                    ? `${dirHandle.name} に設定を保存しました（CSS本体は保護・${t}）`
+                    : `${dirHandle.name} に保存しました（${t}）`, true);
+            } catch (e) {
+                setStatus('保存できませんでした：' + e.message);
+            }
+        }
+
+        // 変更のたびに書くと重いので、1 秒まとめてから保存する
+        function scheduleSave() {
+            if (!dirHandle) return;
+            setStatus('保存中…');
+            clearTimeout(saveTimer);
+            saveTimer = setTimeout(saveNow, 1000);
+        }
+
+        async function connectDir(handle, { ask, initialize = false }) {
+            let connected = false;
+            try {
+                connected = await folderStorage.connect(handle, { requestPermission: ask });
+            } catch (e) {
+                $('reconnect').hidden = false;
+                setStatus('フォルダへ接続できませんでした：' + e.message);
+                return false;
+            }
+            if (!connected) {
+                $('reconnect').hidden = false;
+                setStatus('前回のフォルダは権限が切れています');
+                return false;
+            }
+
+            dirHandle = handle;
+            $('reconnect').hidden = true;
+
+            // file:// で fetch できない場合も、選択フォルダ内の既定文を読める。
+            if (!previewTextOverride) {
+                try { await useExternalPreviewHtml(await folderStorage.readText(SAVE_FILES.preview)); }
+                catch (_) { /* preview.html が無ければ現在の入力を保つ */ }
+            }
+
+            // file:// で fetch が拒否された場合は、選択フォルダ内の完全版CSSを使う。
+            if (baseCss === false) {
+                try {
+                    const cssText = await folderStorage.readText(SAVE_FILES.css);
+                    if (cssText.includes('[data-sweet-type-span]') && !cssText.startsWith('/* sweet-type.css を読めませんでした')) {
+                        await installBaseCss(cssText);
+                    }
+                } catch (_) { /* CSSが無いフォルダでも設定JSONは保存できる */ }
+            }
+
+            // 保存済みの設定があれば読み戻す
+            try {
+                const text = await folderStorage.readText(SAVE_FILES.settings);
+                const data = JSON.parse(text);
+                if (data._snapshots) { snapshots = sanitizedSnapshots(data._snapshots); renderSnapshots(); }
+                await applySettings(data);
+                setStatus(`${handle.name} の設定を読み込みました`, true);
+            } catch (e) {
+                if (e.name === 'NotFoundError') {
+                    setStatus(initialize ? `${handle.name} を作成しました` : `${handle.name} に保存します`, true);
+                    if (!initialize) scheduleSave();
+                } else {
+                    setStatus('保存済み設定を読み込めませんでした：' + e.message);
+                }
+            }
+            return true;
+        }
+
+        $('pick-dir').addEventListener('click', async () => {
+            try {
+                const handle = await folderStorage.pick();
+                await connectDir(handle, { ask: true });
+            } catch (e) {
+                if (e.name !== 'AbortError') setStatus('フォルダを開けませんでした：' + e.message);
+            }
+        });
+
+        function validWorkspaceName(name) {
+            return name && name !== '.' && name !== '..' && !/[\\/:*?"<>|]/.test(name);
+        }
+
+        $('new-dir').addEventListener('click', async () => {
+            const name = (window.prompt('新しい作業フォルダの名前を入力してください') || '').trim();
+            if (!name) return;
+            if (!validWorkspaceName(name)) {
+                setStatus('フォルダ名に / \\ : * ? " < > | は使えません');
+                return;
+            }
+            try {
+                const parent = await folderStorage.pickParent();
+                try {
+                    await parent.getDirectoryHandle(name, { create: false });
+                    setStatus(`「${name}」はすでにあります。作業フォルダを開いてください。`);
+                    return;
+                } catch (e) {
+                    if (e.name !== 'NotFoundError') throw e;
+                }
+
+                const handle = await parent.getDirectoryHandle(name, { create: true });
+                const connected = await connectDir(handle, { ask: true, initialize: true });
+                if (!connected) return;
+
+                snapshots = {};
+                activeSnap = null;
+                renderSnapshots();
+                previewTextOverride = false;
+                await templateSettingsReady;
+                await applySettings(structuredClone(templateSettings || defaultSettings || collectSettings()));
+                setBeforeHtml(bundledPreviewHtml);
+                updateStat();
+                await folderStorage.writeFiles({
+                    [SAVE_FILES.preview]: bundledPreviewHtml.trim() + '\n',
+                    [SAVE_FILES.settings]: JSON.stringify(
+                        { ...collectSettings(), _snapshots: {} }, null, 2) + '\n'
+                });
+                await separatorSourceReady;
+                if (separatorSource) {
+                    await folderStorage.writeText(SAVE_FILES.script, separatorSource);
+                }
+                setStatus(`${name} を新しい作業フォルダとして作成しました（CSSは設定変更または「CSSを保存」で作成）`, true);
+            } catch (e) {
+                if (e.name !== 'AbortError') setStatus('作業フォルダを作成できませんでした：' + e.message);
+            }
+        });
+
+        $('reconnect').addEventListener('click', async () => {
+            const handle = await folderStorage.recall();
+            if (handle) await connectDir(handle, { ask: true });
+        });
+
+        // 起動時：権限が残っていれば黙ってつなぐ
+        folderStorage.recall().then(async (handle) => {
+            if (!handle) return;
+            const ok = await connectDir(handle, { ask: false });
+            if (!ok) { $('reconnect').hidden = false; }
+        });
+
+        if (!ChromeFolderStorage.isSupported()) {
+            $('pick-dir').disabled = true;
+            $('new-dir').disabled = true;
+            setStatus('フォルダ保存には Chrome が必要です');
+        }
+
+
+        // ================================================================
+        // スナップショット
+        // 名前を付けて設定をまるごと控えておき、ボタンで見比べる
+        // ================================================================
+        let snapshots = {};
+        let activeSnap = null;
+
+        function renderSnapshots() {
+            const box = $('snapshots');
+            box.textContent = '';
+            Object.keys(snapshots).forEach((name) => {
+                const b = document.createElement('button');
+                b.textContent = name;
+                if (name === activeSnap) b.classList.add('active');
+                b.addEventListener('click', async () => {
+                    activeSnap = name;
+                    await applySettings(structuredClone(snapshots[name]));
+                    renderSnapshots();
+                });
+                const del = document.createElement('button');
+                del.textContent = '×';
+                del.className = 'del';
+                del.title = name + ' を削除';
+                del.addEventListener('click', () => {
+                    delete snapshots[name];
+                    if (activeSnap === name) activeSnap = null;
+                    renderSnapshots();
+                    scheduleSave();
+                });
+                box.appendChild(b);
+                box.appendChild(del);
+            });
+        }
+
+        $('snap-save').addEventListener('click', () => {
+            const name = ($('snap-name').value || '').trim()
+                || '設定' + (Object.keys(snapshots).length + 1);
+            snapshots[name] = collectSettings();
+            activeSnap = name;
+            $('snap-name').value = '';
+            renderSnapshots();
+            scheduleSave();
+        });
+
+        // IDML の値は、ユーザーがIDMLを選んだときだけ読み込む。
+        // 同梱資料由来の「ツメ」は通常プリセットに含めない。
+        setPreset('beta');
+        renderSnapshots();
+        applyBaseVars();
+        applyBaseWeight();
+        applyTypeVars();
+        applyLayout();
+        applyVars();
+        defaultSettings = withoutPreviewText(collectSettings());
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,175 @@
+/* SweetType の組版設定。sweet-type.html からこの変数を書き換えて使用する。 */
+:root {
+    --sweet-type-base-feature: "halt";
+    --sweet-type-base-variant: normal;
+    --sweet-type-base-halt: 1;
+    --sweet-type-punctuation-manual: 1;
+    --sweet-type-auto-tsume: 1;
+    --sweet-type-spacing-trim: space-all;
+
+    /* 本文コンテナの共通指定。data-sweet-type を付けるだけで適用される。 */
+    --sweet-type-font-family: inherit;
+    --sweet-type-font-size: 1rem;
+    --sweet-type-line-height: normal;
+
+    --sweet-type-target: 0.17em;
+    --sweet-type-strength: 0.75;
+    --sweet-type-max: 0.25em;
+    --sweet-type-tracking: 0.025em;
+    --sweet-type-autospace: 0.18em;
+
+    --sweet-type-kanji-font: inherit;
+    --sweet-type-kanji-scale: 1;
+    --sweet-type-kanji-weight: 510;
+    --sweet-type-kanji-spacing: 0em;
+    --sweet-type-hiragana-font: "Hiragino Mincho ProN", "Yu Mincho", serif;
+    --sweet-type-hiragana-scale: 0.81;
+    --sweet-type-hiragana-weight: inherit;
+    --sweet-type-hiragana-spacing: 0.005em;
+    --sweet-type-katakana-font: inherit;
+    --sweet-type-katakana-scale: 1;
+    --sweet-type-katakana-weight: inherit;
+    --sweet-type-katakana-spacing: 0em;
+    --sweet-type-latin-font: inherit;
+    --sweet-type-latin-scale: 1;
+    --sweet-type-latin-weight: inherit;
+    --sweet-type-latin-spacing: 0em;
+    --sweet-type-yakumono-font: inherit;
+    --sweet-type-yakumono-scale: 1;
+    --sweet-type-yakumono-weight: inherit;
+    --sweet-type-yakumono-spacing: 0em;
+
+    /* ベース（本文全体）の太さ。inherit ならページ側の指定（通常 400）をそのまま使う */
+    --sweet-type-base-weight: inherit;
+
+    --sweet-type-open-before: 0.5em;
+    --sweet-type-open-after: 0em;
+    --sweet-type-close-before: 0em;
+    --sweet-type-close-after: 0.5em;
+    --sweet-type-kuten-before: 0em;
+    --sweet-type-kuten-after: 0.5em;
+    --sweet-type-touten-before: 0em;
+    --sweet-type-touten-after: 0.5em;
+    --sweet-type-nakaten-before: 0.25em;
+    --sweet-type-nakaten-after: 0.25em;
+    --sweet-type-bang-before: 0em;
+    --sweet-type-bang-after: 0.5em;
+    --sweet-type-yakumono-pair: 0.5em;
+    --sweet-type-eol-yakumono: 0em;
+}
+
+.sweet-type,
+[data-sweet-type] {
+    text-align: justify;
+    line-break: strict;
+    font-family: var(--sweet-type-font-family);
+    font-size: var(--sweet-type-font-size);
+    line-height: var(--sweet-type-line-height);
+    font-feature-settings: var(--sweet-type-base-feature);
+    font-variant-east-asian: var(--sweet-type-base-variant);
+    text-spacing-trim: var(--sweet-type-spacing-trim);
+    text-autospace: no-autospace;
+    font-weight: var(--sweet-type-base-weight);
+}
+
+[data-sweet-type-span] {
+    --sweet-type-char-spacing: 0em;
+    display: inline;
+    margin-right: var(--sweet-type-char-spacing);
+}
+
+.sweet-type__kanji {
+    font-family: var(--sweet-type-kanji-font);
+    font-size: calc(1em * var(--sweet-type-kanji-scale));
+    font-weight: var(--sweet-type-kanji-weight);
+    --sweet-type-char-spacing: var(--sweet-type-kanji-spacing);
+    line-height: 0;
+}
+
+.sweet-type__hiragana {
+    font-family: var(--sweet-type-hiragana-font);
+    font-size: calc(1em * var(--sweet-type-hiragana-scale));
+    font-weight: var(--sweet-type-hiragana-weight);
+    --sweet-type-char-spacing: var(--sweet-type-hiragana-spacing);
+    line-height: 0;
+}
+
+.sweet-type__katakana,
+.sweet-type__kana-half,
+.sweet-type__choon,
+.sweet-type__repeat {
+    font-family: var(--sweet-type-katakana-font);
+    font-size: calc(1em * var(--sweet-type-katakana-scale));
+    font-weight: var(--sweet-type-katakana-weight);
+    --sweet-type-char-spacing: var(--sweet-type-katakana-spacing);
+    line-height: 0;
+}
+
+.sweet-type__latin,
+.sweet-type__digit,
+.sweet-type__latin-punct,
+.sweet-type__latin-full,
+.sweet-type__digit-full {
+    font-family: var(--sweet-type-latin-font);
+    font-size: calc(1em * var(--sweet-type-latin-scale));
+    font-weight: var(--sweet-type-latin-weight);
+    --sweet-type-char-spacing: var(--sweet-type-latin-spacing);
+    line-height: 0;
+}
+
+/* 約物（括弧・句読点・中点・！？）。--sweet-type-char-spacing はここで設定すれば、
+   下の各 [data-sweet-type-boundary="..."] の margin-right 式にそのまま乗る。 */
+.sweet-type__open,
+.sweet-type__close,
+.sweet-type__kuten,
+.sweet-type__touten,
+.sweet-type__nakaten,
+.sweet-type__yakumono {
+    font-family: var(--sweet-type-yakumono-font);
+    font-size: calc(1em * var(--sweet-type-yakumono-scale));
+    font-weight: var(--sweet-type-yakumono-weight);
+    --sweet-type-char-spacing: var(--sweet-type-yakumono-spacing);
+    line-height: 0;
+}
+
+/* 通常の和文境界。実測した字面間のアキを目標値へ近づける。 */
+[data-sweet-type-span][style*="--sweet-type-g"]:not([data-sweet-type-boundary]) {
+    margin-right: calc(
+        max(calc(var(--sweet-type-target) - var(--sweet-type-g)), calc(-1 * var(--sweet-type-max)))
+        * var(--sweet-type-strength) * var(--sweet-type-auto-tsume)
+        + var(--sweet-type-tracking) + var(--sweet-type-char-spacing)
+    );
+}
+
+/* 和欧間はフォント自身の字幅へ指定量を追加する。 */
+[data-sweet-type-boundary="autospace"] {
+    margin-right: calc(var(--sweet-type-autospace) + var(--sweet-type-char-spacing));
+}
+
+/*
+ * normal: 指定値を最終的なアキとして扱い、実測余白 --sweet-type-g を差し引く。
+ * 字形機能ベース: 指定値を追加補正としてそのまま足す。
+ */
+[data-sweet-type-boundary="open-before"] { margin-right: calc(var(--sweet-type-open-before) - (1 - var(--sweet-type-punctuation-manual)) * var(--sweet-type-g) + var(--sweet-type-char-spacing)); }
+[data-sweet-type-boundary="open-after"] { margin-right: calc(var(--sweet-type-open-after) - (1 - var(--sweet-type-punctuation-manual)) * var(--sweet-type-g) + var(--sweet-type-char-spacing)); }
+[data-sweet-type-boundary="close-before"] { margin-right: calc(var(--sweet-type-close-before) - (1 - var(--sweet-type-punctuation-manual)) * var(--sweet-type-g) + var(--sweet-type-char-spacing)); }
+[data-sweet-type-boundary="close-after"] { margin-right: calc(var(--sweet-type-close-after) - (1 - var(--sweet-type-punctuation-manual)) * var(--sweet-type-g) + var(--sweet-type-char-spacing)); }
+[data-sweet-type-boundary="kuten-before"] { margin-right: calc(var(--sweet-type-kuten-before) - (1 - var(--sweet-type-punctuation-manual)) * var(--sweet-type-g) + var(--sweet-type-char-spacing)); }
+[data-sweet-type-boundary="kuten-after"] { margin-right: calc(var(--sweet-type-kuten-after) - (1 - var(--sweet-type-punctuation-manual)) * var(--sweet-type-g) + var(--sweet-type-char-spacing)); }
+[data-sweet-type-boundary="touten-before"] { margin-right: calc(var(--sweet-type-touten-before) - (1 - var(--sweet-type-punctuation-manual)) * var(--sweet-type-g) + var(--sweet-type-char-spacing)); }
+[data-sweet-type-boundary="touten-after"] { margin-right: calc(var(--sweet-type-touten-after) - (1 - var(--sweet-type-punctuation-manual)) * var(--sweet-type-g) + var(--sweet-type-char-spacing)); }
+[data-sweet-type-boundary="nakaten-before"] { margin-right: calc(var(--sweet-type-nakaten-before) - (1 - var(--sweet-type-punctuation-manual)) * var(--sweet-type-g) + var(--sweet-type-char-spacing)); }
+[data-sweet-type-boundary="nakaten-after"] { margin-right: calc(var(--sweet-type-nakaten-after) - (1 - var(--sweet-type-punctuation-manual)) * var(--sweet-type-g) + var(--sweet-type-char-spacing)); }
+[data-sweet-type-boundary="bang-before"] { margin-right: calc(var(--sweet-type-bang-before) - (1 - var(--sweet-type-punctuation-manual)) * var(--sweet-type-g) + var(--sweet-type-char-spacing)); }
+[data-sweet-type-boundary="bang-after"] { margin-right: calc(var(--sweet-type-bang-after) - (1 - var(--sweet-type-punctuation-manual)) * var(--sweet-type-g) + var(--sweet-type-char-spacing)); }
+[data-sweet-type-boundary="pair"] { margin-right: calc(var(--sweet-type-yakumono-pair) - (1 - var(--sweet-type-punctuation-manual)) * var(--sweet-type-g) + var(--sweet-type-char-spacing)); }
+
+/* 行末では通常の詰めと文字種別アキを打ち消す。約物だけは行末指定へ揃える。 */
+[data-sweet-type-eol] { margin-right: 0 !important; }
+[data-sweet-type-eol][data-sweet-type-boundary="close-after"],
+[data-sweet-type-eol][data-sweet-type-boundary="kuten-after"],
+[data-sweet-type-eol][data-sweet-type-boundary="touten-after"],
+[data-sweet-type-eol][data-sweet-type-boundary="nakaten-after"],
+[data-sweet-type-eol][data-sweet-type-boundary="bang-after"] {
+    margin-right: calc(var(--sweet-type-eol-yakumono) - (1 - var(--sweet-type-punctuation-manual)) * var(--sweet-type-g)) !important;
+}
