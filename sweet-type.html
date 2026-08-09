@@ -1212,6 +1212,18 @@
             </details>
 
             <details class="section">
+                <summary>ローカルフォントを追加</summary>
+                <div class="field type-card-grid">
+                    <div class="font-field">
+                        <label for="font-family">font-family</label>
+                        <input type="text" id="font-family" placeholder='"ヒラギノ角ゴシック", sans-serif' autocomplete="off">
+                    </div>
+                    <button id="font-family-add" style="margin-top:6px;width:100%;grid-column:1 / -1">選択肢に追加</button>
+                    <div class="hint" id="font-family-result" style="grid-column:1 / -1">PCにインストール済みのフォント名を CSS の font-family 形式で入力します。</div>
+                </div>
+            </details>
+
+            <details class="section">
                 <summary>ウェブフォントを追加</summary>
                 <div class="field">
                     <input type="text" id="wf-url" placeholder="Google Fonts の CSS URL、または <link> タグを貼り付け" autocomplete="off">
@@ -1253,16 +1265,7 @@
                     <div class="type-card-grid cols-2">
                         <div class="font-field">
                             <label for="font">フォント</label>
-                            <select id="font" autocomplete="off">
-                                <option value='"Noto Serif JP", serif'>Noto Serif JP（可変・ウェブフォント）</option>
-                                <option value='"Noto Sans JP", sans-serif'>Noto Sans JP（可変・ウェブフォント）</option>
-                                <option value='"Hiragino Mincho ProN", "Yu Mincho", serif'>ヒラギノ明朝</option>
-                                <option value='"Hiragino Sans", "Yu Gothic", sans-serif'>ヒラギノ角ゴ</option>
-                                <option value='"Yu Mincho", "YuMincho", serif'>游明朝</option>
-                                <option value='"Yu Gothic", "YuGothic", sans-serif'>游ゴシック</option>
-                                <option value='serif'>serif（既定）</option>
-                                <option value='sans-serif'>sans-serif（既定）</option>
-                            </select>
+                            <select id="font" autocomplete="off"></select>
                         </div>
                         <div><label for="size">サイズ(px)</label><input id="size" type="number" min="12" max="32" step="1" value="18" autocomplete="off"></div>
                         <div><label for="base-weight">太さ</label><input id="base-weight" type="number" min="0" max="900" step="10" value="0" title="0で既定（400）" autocomplete="off"></div>
@@ -1272,7 +1275,7 @@
                     <summary>漢字</summary>
                     <div class="type-card-grid">
                         <div class="font-field"><label for="type-kanji-font">フォント</label><select id="type-kanji-font" autocomplete="off"></select></div>
-                        <div><label for="type-kanji-scale">大きさ</label><input id="type-kanji-scale" type="number" min="0.5" max="2" step="0.01" value="1"></div>
+                        <div><label for="type-kanji-scale">サイズ</label><input id="type-kanji-scale" type="number" min="0.5" max="2" step="0.01" value="1"></div>
                         <div><label for="type-kanji-weight">太さ</label><input id="type-kanji-weight" type="number" min="0" max="900" step="10" value="0" title="0でベースを継承"></div>
                         <div><label for="type-kanji-spacing">アキ(em)</label><input id="type-kanji-spacing" type="number" min="-0.5" max="1" step="0.005" value="0"></div>
                     </div>
@@ -1281,7 +1284,7 @@
                     <summary>ひらがな</summary>
                     <div class="type-card-grid">
                         <div class="font-field"><label for="type-hiragana-font">フォント</label><select id="type-hiragana-font" autocomplete="off"></select></div>
-                        <div><label for="type-hiragana-scale">大きさ</label><input id="type-hiragana-scale" type="number" min="0.5" max="2" step="0.01" value="1"></div>
+                        <div><label for="type-hiragana-scale">サイズ</label><input id="type-hiragana-scale" type="number" min="0.5" max="2" step="0.01" value="1"></div>
                         <div><label for="type-hiragana-weight">太さ</label><input id="type-hiragana-weight" type="number" min="0" max="900" step="10" value="0" title="0でベースを継承"></div>
                         <div><label for="type-hiragana-spacing">アキ(em)</label><input id="type-hiragana-spacing" type="number" min="-0.5" max="1" step="0.005" value="0"></div>
                     </div>
@@ -1290,7 +1293,7 @@
                     <summary>カタカナ</summary>
                     <div class="type-card-grid">
                         <div class="font-field"><label for="type-katakana-font">フォント</label><select id="type-katakana-font" autocomplete="off"></select></div>
-                        <div><label for="type-katakana-scale">大きさ</label><input id="type-katakana-scale" type="number" min="0.5" max="2" step="0.01" value="1"></div>
+                        <div><label for="type-katakana-scale">サイズ</label><input id="type-katakana-scale" type="number" min="0.5" max="2" step="0.01" value="1"></div>
                         <div><label for="type-katakana-weight">太さ</label><input id="type-katakana-weight" type="number" min="0" max="900" step="10" value="0" title="0でベースを継承"></div>
                         <div><label for="type-katakana-spacing">アキ(em)</label><input id="type-katakana-spacing" type="number" min="-0.5" max="1" step="0.005" value="0"></div>
                     </div>
@@ -1299,7 +1302,7 @@
                     <summary>英数字</summary>
                     <div class="type-card-grid">
                         <div class="font-field"><label for="type-latin-font">フォント</label><select id="type-latin-font" autocomplete="off"></select></div>
-                        <div><label for="type-latin-scale">大きさ</label><input id="type-latin-scale" type="number" min="0.5" max="2" step="0.01" value="1"></div>
+                        <div><label for="type-latin-scale">サイズ</label><input id="type-latin-scale" type="number" min="0.5" max="2" step="0.01" value="1"></div>
                         <div><label for="type-latin-weight">太さ</label><input id="type-latin-weight" type="number" min="0" max="900" step="10" value="0" title="0でベースを継承"></div>
                         <div><label for="type-latin-spacing">アキ(em)</label><input id="type-latin-spacing" type="number" min="-0.5" max="1" step="0.005" value="0"></div>
                     </div>
@@ -1308,7 +1311,7 @@
                     <summary>約物</summary>
                     <div class="type-card-grid">
                         <div class="font-field"><label for="type-yakumono-font">フォント</label><select id="type-yakumono-font" autocomplete="off"></select></div>
-                        <div><label for="type-yakumono-scale">大きさ</label><input id="type-yakumono-scale" type="number" min="0.5" max="2" step="0.01" value="1"></div>
+                        <div><label for="type-yakumono-scale">サイズ</label><input id="type-yakumono-scale" type="number" min="0.5" max="2" step="0.01" value="1"></div>
                         <div><label for="type-yakumono-weight">太さ</label><input id="type-yakumono-weight" type="number" min="0" max="900" step="10" value="0" title="0でベースを継承"></div>
                         <div><label for="type-yakumono-spacing">アキ(em)</label><input id="type-yakumono-spacing" type="number" min="-0.5" max="1" step="0.005" value="0"></div>
                     </div>
@@ -1811,15 +1814,35 @@ B氏が持ち込んだ3冊の古びたノートには、かつての文学者た
             return BASE_PROFILES[$('base-mode').value] || BASE_PROFILES.normal;
         }
 
-        function populateTypeFontOptions() {
-            const baseOptions = [...$('font').options];
-            TYPE_SETTINGS.forEach((type) => {
-                const select = $('type-' + type + '-font');
-                select.add(new Option('ベースを継承', ''));
-                baseOptions.forEach((option) => select.add(new Option(option.textContent, option.value)));
+        const DEFAULT_FONT_OPTIONS = [
+            { value: '"Noto Serif JP", serif', label: 'Noto Serif JP（可変・ウェブフォント）' },
+            { value: '"Noto Sans JP", sans-serif', label: 'Noto Sans JP（可変・ウェブフォント）' },
+            { value: '"Hiragino Mincho ProN", "Yu Mincho", serif', label: 'ヒラギノ明朝' },
+            { value: '"Hiragino Sans", "Yu Gothic", sans-serif', label: 'ヒラギノ角ゴ' },
+            { value: '"Yu Mincho", "YuMincho", serif', label: '游明朝' },
+            { value: '"Yu Gothic", "YuGothic", sans-serif', label: '游ゴシック' },
+            { value: 'serif', label: 'serif（既定）' },
+            { value: 'sans-serif', label: 'sans-serif（既定）' },
+        ];
+        const FONT_OPTIONS = DEFAULT_FONT_OPTIONS.map((option) => ({ ...option }));
+
+        function fontSelects() {
+            return [
+                { select: $('font'), inheritsBase: false },
+                ...TYPE_SETTINGS.map((type) => ({ select: $('type-' + type + '-font'), inheritsBase: true }))
+            ];
+        }
+
+        function populateFontOptions() {
+            fontSelects().forEach(({ select, inheritsBase }) => {
+                const selected = select.value;
+                select.textContent = '';
+                if (inheritsBase) select.add(new Option('ベースを継承', ''));
+                FONT_OPTIONS.forEach(({ label, value }) => select.add(new Option(label, value)));
+                if ([...select.options].some((option) => option.value === selected)) select.value = selected;
             });
         }
-        populateTypeFontOptions();
+        populateFontOptions();
 
         // 約物のアキ。InDesign の文字組みアキ量設定と同じく、
         // どの約物のどちら側かで 12 通り＋約物どうしの 1 通り
@@ -2141,6 +2164,14 @@ B氏が持ち込んだ3冊の古びたノートには、かつての文学者た
             });
         }
 
+        // ベース・文字種別を問わず、書体・大きさ・太さの変更後は同じ手順で再組版する。
+        async function refreshTypography() {
+            applyBaseWeight();
+            applyTypeVars();
+            await applyLayout();
+            updateOutput();
+        }
+
         function applyVars() {
             for (const [id, name, unit, digits] of VARS) {
                 const v = $(id).value;
@@ -2305,11 +2336,11 @@ B氏が持ち込んだ3冊の古びたノートには、かつての文学者た
             $('ref-col').hidden = !e.target.checked;
             scheduleSave();
         });
-        ['size', 'lh', 'measure'].forEach(id => $(id).addEventListener('input', () => { applyLayout(); updateOutput(); }));
-        $('measure-number').addEventListener('input', () => { syncMeasureRangeFromNumber(); applyLayout(); updateOutput(); });
+        ['size', 'lh', 'measure'].forEach(id => $(id).addEventListener('input', refreshTypography));
+        $('measure-number').addEventListener('input', () => { syncMeasureRangeFromNumber(); refreshTypography(); });
         document.querySelectorAll('input[name="measure-unit"]').forEach((r) =>
-            r.addEventListener('change', () => { syncMeasureRange(); applyLayout(); updateOutput(); }));
-        $('font').addEventListener('change', () => { applyLayout(); updateOutput(); });
+            r.addEventListener('change', () => { syncMeasureRange(); refreshTypography(); }));
+        fontSelects().forEach(({ select }) => select.addEventListener('change', refreshTypography));
         $('compare-mode').addEventListener('change', () => { applyCompareMode(); scheduleSave(); });
         $('show-guide').addEventListener('change', (e) => {
             document.querySelector('.compare').classList.toggle('guide', e.target.checked);
@@ -2317,25 +2348,15 @@ B氏が持ち込んだ3冊の古びたノートには、かつての文学者た
         });
         VARS.forEach(([id]) => $(id).addEventListener('input', applyVars));
         TYPE_SETTINGS.forEach((type) => {
-            ['font', 'scale', 'weight', 'spacing'].forEach((field) => {
-                $("type-" + type + "-" + field).addEventListener('input', async () => {
-                    applyTypeVars();
-                    await applyLayout();
-                    updateOutput();
-                });
-            });
+            ['scale', 'weight', 'spacing'].forEach((field) =>
+                $("type-" + type + "-" + field).addEventListener('input', refreshTypography));
         });
         $('base-mode').addEventListener('change', async () => {
             applyBaseVars();
             setPreset($('base-mode').value === 'normal' ? 'beta' : 'hankaku');
-            await applyLayout();
-            updateOutput();
+            await refreshTypography();
         });
-        $('base-weight').addEventListener('input', async () => {
-            applyBaseWeight();
-            await applyLayout();
-            updateOutput();
-        });
+        $('base-weight').addEventListener('input', refreshTypography);
 
         function setRightView(view) {
             const showCode = view === 'code';
@@ -2351,6 +2372,24 @@ B氏が持ち込んだ3冊の古びたノートには、かつての文学者た
         $('preset').addEventListener('change', (e) => setPreset(e.target.value));
         $('idml').addEventListener('change', (e) => { if (e.target.files[0]) loadIdml(e.target.files[0]); });
 
+        function addFontOption(value, label) {
+            value = (value || '').trim();
+            if (!value) return false;
+            const added = !FONT_OPTIONS.some((option) => option.value === value);
+            if (added) FONT_OPTIONS.push({ value, label: label || value });
+            fontSelects().forEach(({ select }) => {
+                if (![...select.options].some((o) => o.value === value)) {
+                    select.add(new Option(label || value, value));
+                }
+            });
+            return added;
+        }
+
+        function ensureFontOption(value) {
+            if (!value || FONT_OPTIONS.some((option) => option.value === value)) return;
+            addFontOption(value, value + '（追加）');
+        }
+
         function prepareWebFont(url, family) {
             if (url) {
                 let link = [...document.querySelectorAll('link[rel="stylesheet"]')]
@@ -2364,14 +2403,26 @@ B氏が持ち込んだ3冊の古びたノートには、かつての文学者た
                 webFontStylesheetReady = stylesheetReady(link);
             }
             const value = `"${family}", serif`;
-            if (![...$('font').options].some((o) => o.value === value)) {
-                $('font').add(new Option(family + '（追加）', value), 0);
-                TYPE_SETTINGS.forEach((type) => {
-                    $('type-' + type + '-font').add(new Option(family + '（追加）', value), 1);
-                });
-            }
+            addFontOption(value, family + '（追加）');
             return value;
         }
+
+        $('font-family-add').addEventListener('click', async () => {
+            const input = $('font-family');
+            const value = input.value.trim();
+            const result = $('font-family-result');
+            if (!value) {
+                result.textContent = 'font-family を入力してください。';
+                return;
+            }
+            addFontOption(value, value + '（追加）');
+            $('font').value = value;
+            result.textContent = `「${value}」を選択肢に追加しました。`;
+            await refreshTypography();
+        });
+        $('font-family').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') $('font-family-add').click();
+        });
 
         // 貼り付けられたテキストから、実際に使う CSS の URL と書体名を取り出す。
         // ・裸の URL
@@ -2405,8 +2456,7 @@ B氏が持ち込んだ3冊の古びたノートには、かつての文学者た
             const value = prepareWebFont(url, family);
             $('font').value = value;
             result.textContent = `「${family}」を読み込みました。`;
-            await applyLayout();
-            updateOutput();
+            await refreshTypography();
         });
 
         $('copy').addEventListener('click', async () => {
@@ -2499,7 +2549,9 @@ B氏が持ち込んだ3冊の古びたノートには、かつての文学者た
             const v = {};
             ['font', 'size', 'lh', 'measure', 'wf-url', 'compare-mode', 'base-mode', 'base-weight']
                 .forEach((id) => { v[id] = $(id).value; });
-            v._schemaVersion = 3;
+            v._schemaVersion = 4;
+            // 選択していない追加フォントも、次に開いたときの選択肢として残す。
+            v['font-options'] = FONT_OPTIONS.slice(DEFAULT_FONT_OPTIONS.length);
             v['measure-unit'] = measureUnit();
             v['show-guide'] = $('show-guide').checked;
             v['show-ref'] = $('show-ref').checked;
@@ -2535,6 +2587,10 @@ B氏が持ち込んだ3冊の古びたノートには、かつての文学者た
             ['size', 'lh', 'wf-url', 'compare-mode', 'base-mode', 'base-weight'].forEach((id) => {
                 if (v[id] !== undefined) $(id).value = v[id];
             });
+            (v['font-options'] || []).forEach((option) => {
+                if (typeof option === 'string') addFontOption(option, option + '（追加）');
+                else if (option && typeof option.value === 'string') addFontOption(option.value, option.label);
+            });
             // 保存済みURLも復元時に読み込み直す。URLを覚えるだけでは、リロード後に
             // 選択肢だけ残って実際のウェブフォントがない状態になってしまう。
             if (v['wf-url']) {
@@ -2543,11 +2599,17 @@ B氏が持ち込んだ3冊の古びたノートには、かつての文学者た
             }
             // 旧形式（手入力の書体名）で保存された設定との互換用。新規保存では書き出さない
             if (v['wf-family']) prepareWebFont(v['wf-url'] || '', v['wf-family']);
-            if (v.font !== undefined) $('font').value = v.font;
+            if (v.font !== undefined) {
+                ensureFontOption(v.font);
+                $('font').value = v.font;
+            }
             TYPE_SETTINGS.forEach((type) => {
                 ['font', 'scale', 'weight', 'spacing'].forEach((field) => {
                     const id = 'type-' + type + '-' + field;
-                    if (v[id] !== undefined) $(id).value = v[id];
+                    if (v[id] !== undefined) {
+                        if (field === 'font') addFontOption(v[id], v[id] + '（追加）');
+                        $(id).value = v[id];
+                    }
                 });
             });
             // 旧設定の欧文スケール／ウェイトを新しい英数字設定へ移す。
