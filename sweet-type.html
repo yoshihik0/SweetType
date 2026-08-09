@@ -8,6 +8,16 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link id="default-web-fonts" rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@200..900&family=Noto+Sans+JP:wght@100..900&display=swap">
+    <!-- file:// で template/preview.html を読めない場合の表示用バックアップ。
+         template/preview.html を正とし、scripts/sync-template-preview.mjs で生成する。 -->
+    <template id="embedded-template-preview">
+<p>テキストの「形」に、果たして本当の意味などあるだらうか？</p>
+<p>彼は万年筆を置き、冷め切ったコーヒーを口に含む。「2026年の今日、私たちが試みてゐることは、未だかつて誰も夢みたことのない『構造の再定義』なのだ」。</p>
+<p>B氏が持ち込んだ3冊の古びたノートには、かつての文学者たちが遺した謎めいた暗号、いや、ただのラクガキが記されてゐた。「A案を採用するか、それともC案のデータベースレスな手法に特化すべきか」。迷いは深い。だが、時間は容赦なく深夜3時を指し示してゐる。</p>
+<p>よし、すべてを一度「破棄」しよう。</p>
+<p>彼は新しいJSONファイルを開き、1からコードを書き直す。キーボードを叩く乾いた音が、静まり返った部屋のなかに響きわたる。「1ピクセルのズレも、1文字の誤謬も、すべてはこの作品の新しい表現形式のための必然なのだ」。</p>
+<p>外はすでに白み始めている。10個のモジュールが統合され、UIの画面上に静かな光が灯った。それは完成であり、同時に新たな「闘争」の始まりに他ならなかつた。</p>
+    </template>
     <!-- file:// でも Chrome が読み込める。JS 側ではこのCSSを保存用にも利用する。 -->
     <link id="template-sweet-type-css" rel="stylesheet" href="template/sweet-type.css">
     <!-- file:// でCSS本文の参照まで拒否された場合の、保存用バックアップ。
@@ -1654,21 +1664,17 @@
             });
         }
         let webFontStylesheetReady = stylesheetReady($('default-web-fonts'));
-        // file:// で直接開くと Chrome は preview.html の fetch を許可しない。
-        // その場合にも新規案件の既定文が変わらないよう、template/preview.html と
-        // 同じ本文をここにも保持する。HTTP(S) で開いた場合は下の fetch の値を使う。
-        const FALLBACK_PREVIEW_TEXT = `――テキストの「形」に、果たして本当の意味などあるだらうか？
-彼は万年筆を置き、冷め切ったコーヒーを口に含む。「2026年の今日、私たちが試みてゐることは、未だかつて誰も夢みたことのない『構造の再定義』なのだ」。
-B氏が持ち込んだ3冊の古びたノートには、かつての文学者たちが遺した謎めいた暗号――いや、ただのラクガキか――が記されてゐた。「A案を採用するか、それともC案のデータベースレスな手法に特化すべきか」。迷いは深い。だが、時間は容赦なく深夜3時を指し示してゐる。
-――……よし、すべてを一度「破棄」しよう。
-彼は新しいJSONファイルを開き、1からコードを書き直す。キーボードを叩く乾いた音が、静まり返った部屋のなかに響きわたる。「1ピクセルのズレも、1文字の誤謬も、すべてはこの作品の――いや、新しい表現形式のための必然なのだ」。
-外はすでに白み始めている。10個のモジュールが統合され、UIの画面上に静かな光が灯った。それは完成であり、同時に新たな「闘争」の始まりに他ならなかつた。`;
         const TEMPLATE_FILES = {
             preview: 'template/preview.html', settings: 'template/settings.json', script: 'template/sweet-type.js'
         };
         const textToPreviewHtml = (text) => text.replace(/\r\n?/g, '\n').split('\n')
             .filter(Boolean).map((line) => `<p>${escapeHtml(line)}</p>`).join('\n');
-        let bundledPreviewHtml = textToPreviewHtml(FALLBACK_PREVIEW_TEXT);
+        function embeddedTemplatePreviewHtml() {
+            const source = $('embedded-template-preview').content.innerHTML.trim();
+            if (!source) throw new Error('埋め込みテンプレート本文が空です');
+            return source + '\n';
+        }
+        let bundledPreviewHtml = embeddedTemplatePreviewHtml();
         let templateSettings = null;
         let separatorSource = null;
         function embeddedTemplateScript() {
@@ -1745,9 +1751,9 @@ B氏が持ち込んだ3冊の古びたノートには、かつての文学者た
             })
             .catch(() => {
                 // file:// では選択した作業フォルダから接続時に読む。
-                // 接続前は template/preview.html と同じ既定文を表示する。
+                // 接続前は埋め込みテンプレート本文を表示する。
                 if (!previewTextOverride && !before.textContent) {
-                    setBeforeText(FALLBACK_PREVIEW_TEXT);
+                    setBeforeHtml(bundledPreviewHtml);
                     updateStat();
                 }
             });
