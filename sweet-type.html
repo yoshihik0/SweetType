@@ -36,6 +36,8 @@
     --sweet-type-font-family: inherit;
     --sweet-type-font-size: 1rem;
     --sweet-type-line-height: normal;
+    --sweet-type-text-align: justify;
+    --sweet-type-line-break: strict;
 
     --sweet-type-target: 0.17em;
     --sweet-type-strength: 0.75;
@@ -85,8 +87,8 @@
 
 .sweet-type,
 [data-sweet-type] {
-    text-align: justify;
-    line-break: strict;
+    text-align: var(--sweet-type-text-align);
+    line-break: var(--sweet-type-line-break);
     font-family: var(--sweet-type-font-family);
     font-size: var(--sweet-type-font-size);
     line-height: var(--sweet-type-line-height);
@@ -1265,6 +1267,23 @@
                     <div class="row"><label for="lh">行送り</label><output id="o-lh">2</output></div>
                     <input type="range" id="lh" min="1.4" max="2.6" step="0.05" value="2" autocomplete="off">
                 </div>
+                <div class="field type-card-grid cols-2">
+                    <div>
+                        <label for="text-align">行揃え</label>
+                        <select id="text-align" autocomplete="off">
+                            <option value="justify">ジャスティファイ</option>
+                            <option value="start">行頭揃え</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="line-break">禁則処理</label>
+                        <select id="line-break" autocomplete="off">
+                            <option value="strict">厳格</option>
+                            <option value="normal">標準</option>
+                            <option value="loose">ゆるい</option>
+                        </select>
+                    </div>
+                </div>
             </details>
 
             <h2>文字設定</h2>
@@ -2109,6 +2128,8 @@
                 el.style.fontFamily = font;
                 el.style.fontSize = size + 'px';
                 el.style.lineHeight = lh;
+                el.style.textAlign = $('text-align').value;
+                el.style.lineBreak = $('line-break').value;
                 el.style.width = width + 'px';
             }
             $('o-lh').textContent = lh;
@@ -2257,6 +2278,8 @@
                 ['--sweet-type-font-family', $('font').value],
                 ['--sweet-type-font-size', $('size').value + 'px'],
                 ['--sweet-type-line-height', $('lh').value],
+                ['--sweet-type-text-align', $('text-align').value],
+                ['--sweet-type-line-break', $('line-break').value],
                 ['--sweet-type-target', $('target').value + 'em'],
                 ['--sweet-type-strength', $('strength').value],
                 ['--sweet-type-max', $('max').value + 'em'],
@@ -2341,6 +2364,7 @@
             scheduleSave();
         });
         ['size', 'lh', 'measure'].forEach(id => $(id).addEventListener('input', refreshTypography));
+        ['text-align', 'line-break'].forEach(id => $(id).addEventListener('change', refreshTypography));
         $('measure-number').addEventListener('input', () => { syncMeasureRangeFromNumber(); refreshTypography(); });
         document.querySelectorAll('input[name="measure-unit"]').forEach((r) =>
             r.addEventListener('change', () => { syncMeasureRange(); refreshTypography(); }));
@@ -2551,7 +2575,7 @@
         // いまの設定をひとまとめにする（保存と読み込みで同じ形を使う）
         function collectSettings() {
             const v = {};
-            ['font', 'size', 'lh', 'measure', 'wf-url', 'compare-mode', 'base-mode', 'base-weight']
+            ['font', 'size', 'lh', 'measure', 'text-align', 'line-break', 'wf-url', 'compare-mode', 'base-mode', 'base-weight']
                 .forEach((id) => { v[id] = $(id).value; });
             v._schemaVersion = 4;
             // 選択していない追加フォントも、次に開いたときの選択肢として残す。
@@ -2588,7 +2612,7 @@
         async function applySettings(v) {
             AKI.forEach((name) => { if (v['a-' + name] !== undefined) $('a-' + name).value = v['a-' + name]; });
             VARS.forEach(([id]) => { if (v[id] !== undefined) $(id).value = v[id]; });
-            ['size', 'lh', 'wf-url', 'compare-mode', 'base-mode', 'base-weight'].forEach((id) => {
+            ['size', 'lh', 'text-align', 'line-break', 'wf-url', 'compare-mode', 'base-mode', 'base-weight'].forEach((id) => {
                 if (v[id] !== undefined) $(id).value = v[id];
             });
             (v['font-options'] || []).forEach((option) => {

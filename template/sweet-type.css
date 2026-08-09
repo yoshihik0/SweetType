@@ -11,6 +11,8 @@
     --sweet-type-font-family: inherit;
     --sweet-type-font-size: 1rem;
     --sweet-type-line-height: normal;
+    --sweet-type-text-align: justify;
+    --sweet-type-line-break: strict;
 
     --sweet-type-target: 0.17em;
     --sweet-type-strength: 0.75;
@@ -60,8 +62,8 @@
 
 .sweet-type,
 [data-sweet-type] {
-    text-align: justify;
-    line-break: strict;
+    text-align: var(--sweet-type-text-align);
+    line-break: var(--sweet-type-line-break);
     font-family: var(--sweet-type-font-family);
     font-size: var(--sweet-type-font-size);
     line-height: var(--sweet-type-line-height);

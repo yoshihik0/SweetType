@@ -3,6 +3,8 @@
   "size": "18",
   "lh": "2",
   "measure": "29",
+  "text-align": "justify",
+  "line-break": "strict",
   "wf-url": "",
   "compare-mode": "text-spacing-trim:space-all",
   "base-mode": "halt",

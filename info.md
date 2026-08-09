@@ -257,6 +257,10 @@ Web フォントを使っている場合は `document.fonts.ready` の後で自�
 
 ```css
 :root {
+    /* ブロック */
+    --sweet-type-text-align: justify;  /* justify / start */
+    --sweet-type-line-break: strict;   /* strict / normal / loose */
+
     /* かな・漢字どうし */
     --sweet-type-target: 0.04em;        /* 目標のアキ */
     --sweet-type-strength: 0.7;         /* 詰め強度。0 でベタ組み、1 で目標まで詰める */
@@ -376,7 +380,7 @@ Web フォントを使っている場合は `document.fonts.ready` の後で自�
   `-after` 系のアキがそのまま消えることで版面に揃います。
 - `text-spacing-trim` 非対応のブラウザでは、行頭の始め括弧が字下がりのままになります。
   約物の詰め自体は JS が実測値から算出するので効きます。
-- 小書きの仮名が行頭に来るのが気になる場合は `line-break: strict` を指定してください。
+- 小書きの仮名が行頭に来るのが気になる場合は、「ブロック」の禁則処理を「厳格」にしてください。
 
 ## 動作環境
 
