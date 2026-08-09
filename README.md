@@ -6,11 +6,10 @@
 詰め量は canvas `TextMetrics` で**実フォントの字面を実測して**決めるので、書体を変えれば自動的に追随します。
 
 - 設定ツール（ウェブ文字組エディタ） [sweet-type.html](sweet-type.html)
-- 次段階の設計メモ：[docs/next-typography-engine.md](docs/next-typography-engine.md)
 
 ## 使い方
 
-CSS と JS を読み込んで、本文を囲む親要素に `class="sweet-type"` を付けるだけです。
+sweet-type.css と sweet-type.js を読み込んで、本文を囲む親要素に `class="sweet-type"` を付けるだけです。
 
 ```html
 <link rel="stylesheet" href="sweet-type.css">
@@ -35,11 +34,9 @@ CSS と JS を読み込んで、本文を囲む親要素に `class="sweet-type"`
 SweetType.apply('.honbun');
 ```
 
-### 設定を追い込む
+### 設定ファイルを作成する
 
-[sweet-type.html](sweet-type.html)（ウェブ文字組エディタ）を開くと、本文・書体・組体裁を指定しながら調整でき、そのまま貼れる CSS が
-書き出されます。約物は前後それぞれを数値で入れられ、プリセットや **IDML の読み込み**から始められます。
-一行の長さは文字数でもピクセルでも指定できます。
+[sweet-type.html](sweet-type.html)（ウェブ文字組エディタ）を開くと、本文・書体・組体裁を指定しながら調整でき、そのまま貼れる CSS が書き出されます。
 
 「字形のベース」は通常字形の実測ツメと、`palt`、`palt + kern`、`halt`、`pwid`、`hwid`、
 `fwid`、`font-variant-east-asian: proportional-width` から選べます。
@@ -49,16 +46,11 @@ SweetType.apply('.honbun');
 
 #### プレビュー本文
 
-新規作業フォルダの既定の本文は [`template/preview.html`](template/preview.html) から読み込みます。
-基準の文章を変えたい場合はこのファイルを編集してください。「本文を一時変更」を開いて直接ペースト・入力した場合は、その内容を優先し、
-そのタブでは外部ファイルの遅延読込や設定復元で上書きしません。本文は
-`settings.json` には保存せず、次回起動時は `preview.html` を読み込みます。
+新規作業フォルダの既定の本文は [`preview.html`](preview.html) から読み込みます。
+基準の文章を変えたい場合はこのファイルを編集してください。
 
 右側は「プレビュー」と「コード」を切り替えて表示します。「CSSを保存」を押すと、現在生成されている
 完全版CSSを選択フォルダの `sweet-type.css` へ即時保存します。
-
-書き出す CSS は `template/sweet-type.css` を読み込んで `:root` の値だけ差し替えたものなので、
-ライブラリを更新しても中身が食い違いません。
 
 #### フォルダに保存する
 
@@ -81,26 +73,6 @@ SweetType.apply('.honbun');
 
 File System Access API を使うので **Chrome 前提**です。
 
-フォルダ選択・権限の復元・ファイル書き込みは、再利用できる
-[`docs/folder-storage.js`](docs/folder-storage.js) に分けてあります。別のツールでもこのファイルを読み込み、
-`ChromeFolderStorage` を作れば同じ保存方式を使えます。
-
-```html
-<script src="docs/folder-storage.js"></script>
-<script>
-const storage = new ChromeFolderStorage({
-    dbName: 'my-tool',
-    pickerId: 'my-tool-folder'
-});
-
-async function selectAndSave() {
-    const folder = await storage.pick();       // ボタンの click 内で呼ぶ
-    if (await storage.connect(folder, { requestPermission: true })) {
-        await storage.writeText('data.json', JSON.stringify({ value: 1 }));
-    }
-}
-</script>
-```
 
 #### スナップショット
 
@@ -177,22 +149,11 @@ IDML から読み込んだ値をそのまま使えます。指定した値はそ
 
 ### InDesign の設定
 
-IDML から抜き出した文字組みアキ量設定は、参照資料として
-[`info/mojikumi.json`](info/mojikumi.json) に置いてあります。ツールの通常プリセットには含めません。
-
-別の IDML を読み込むこともできます。IDML は ZIP + XML の公開形式なので、
+InDesign の IDML を読み込むこともできます。IDML は ZIP + XML の公開形式なので、
 `DecompressionStream` で展開して `designmap.xml` の `<MojikumiTable>` を読んでいます。
 外部ライブラリは使っていません。
 
-同梱の [des_mjk_ver4_InDesign/des_mjk_v4_2021.idml](des_mjk_ver4_InDesign/) で確認したところ、
-`ベタ_A` の値は JIS X 4051 のベタ組みと完全に一致しました
-（始め括弧の前 0.5em、句点の後 0.5em、中点の前後 0.25em、和欧間 0.125em）。
-
-なお 0.5em＝二分、0.25em＝四分が目安ですが、ジャスティファイで伸縮するぶん、
-`0.18em` のような中間の値も十分に実用的です。ツールは 0.005 刻みで指定できます。
-
-ひとつ構造的な違いがあります。**InDesign は各アキに最小・最適・最大の 3 値を持ち、
-その範囲で行の調整をします。**CSS の margin は固定値で、ブラウザの `text-align: justify` に
+**InDesign は各アキに最小・最適・最大の 3 値を持ち、その範囲で行の調整をします。**CSS の margin は固定値で、ブラウザの `text-align: justify` に
 「約物のアキで吸収させる」とは指示できないため、読み込めるのは**最適値だけ**です。
 
 ### 行末の扱い
@@ -203,8 +164,7 @@ CSS 側で打ち消しています。
 
 扱いは 2 通りに分かれます。
 
-**約物の手前の字と、かな詰め**は打ち消します。たとえば `代表作は「FARCE…` の `は` は
-始め括弧のアキを肩代わりして 0.66em 詰まっているので、行末に来ると字面ごと版面から出てしまいます。
+**約物の手前の字と、かな詰め**は打ち消します。
 
 **`」）。、` の後ろ**は、本文中と同じアキを残すと行末の読点が版面の右端に届かず内側に
 引っ込んで見えます（実測で読点が 3.2px、句点が 5.5px 手前で止まっていました）。
