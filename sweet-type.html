@@ -1192,8 +1192,7 @@
         <div id="snapshots" class="snapshots"></div>
         <div class="save-bar">
             <span id="save-status">作業フォルダが未設定です</span>
-            <button id="pick-dir">作業フォルダを開く</button>
-            <button id="new-dir">新しい作業フォルダ</button>
+            <button id="pick-dir">作業フォルダを指定</button>
             <button id="save-css">CSSを保存</button>
             <button id="reconnect" hidden>前回のフォルダに再接続</button>
         </div>
@@ -1603,15 +1602,6 @@
                 delete options.startIn;
                 return global.showDirectoryPicker(options);
             }
-        }
-
-        // 新しい作業フォルダを作るときは、前回の作業フォルダではなく
-        // その親になる場所を選んでもらう。
-        async pickParent() {
-            if (!ChromeFolderStorage.isSupported()) {
-                throw new Error('このブラウザはフォルダ保存に対応していません（Chrome を使用してください）');
-            }
-            return global.showDirectoryPicker({ id: this.pickerId + '-parent', mode: 'readwrite' });
         }
 
         async readText(name) {
@@ -2716,8 +2706,13 @@ B氏が持ち込んだ3冊の古びたノートには、かつての文学者た
                 setStatus(`${handle.name} の設定を読み込みました`, true);
             } catch (e) {
                 if (e.name === 'NotFoundError') {
-                    setStatus(initialize ? `${handle.name} を作成しました` : `${handle.name} に保存します`, true);
-                    if (!initialize) scheduleSave();
+                    if (initialize) {
+                        await initializeWorkspace();
+                        setStatus(`${handle.name} を作業フォルダとして設定しました`, true);
+                    } else {
+                        setStatus(`${handle.name} に保存します`, true);
+                        scheduleSave();
+                    }
                 } else {
                     setStatus('保存済み設定を読み込めませんでした：' + e.message);
                 }
@@ -2725,62 +2720,35 @@ B氏が持ち込んだ3冊の古びたノートには、かつての文学者た
             return true;
         }
 
+        async function initializeWorkspace() {
+            snapshots = {};
+            activeSnap = null;
+            renderSnapshots();
+            previewTextOverride = false;
+            await templateSettingsReady;
+            await applySettings(structuredClone(templateSettings || defaultSettings || collectSettings()));
+            setBeforeHtml(bundledPreviewHtml);
+            updateStat();
+            await folderStorage.writeFiles({
+                [SAVE_FILES.preview]: bundledPreviewHtml.trim() + '\n',
+                [SAVE_FILES.settings]: JSON.stringify(
+                    { ...collectSettings(), _snapshots: {} }, null, 2) + '\n'
+            });
+            await separatorSourceReady;
+            if (separatorSource) {
+                await folderStorage.writeText(SAVE_FILES.script, separatorSource);
+            }
+        }
+
         $('pick-dir').addEventListener('click', async () => {
             try {
                 const handle = await folderStorage.pick();
-                await connectDir(handle, { ask: true });
+                await connectDir(handle, { ask: true, initialize: true });
             } catch (e) {
                 if (e.name !== 'AbortError') setStatus('フォルダを開けませんでした：' + e.message);
             }
         });
 
-        function validWorkspaceName(name) {
-            return name && name !== '.' && name !== '..' && !/[\\/:*?"<>|]/.test(name);
-        }
-
-        $('new-dir').addEventListener('click', async () => {
-            const name = (window.prompt('新しい作業フォルダの名前を入力してください') || '').trim();
-            if (!name) return;
-            if (!validWorkspaceName(name)) {
-                setStatus('フォルダ名に / \\ : * ? " < > | は使えません');
-                return;
-            }
-            try {
-                const parent = await folderStorage.pickParent();
-                try {
-                    await parent.getDirectoryHandle(name, { create: false });
-                    setStatus(`「${name}」はすでにあります。作業フォルダを開いてください。`);
-                    return;
-                } catch (e) {
-                    if (e.name !== 'NotFoundError') throw e;
-                }
-
-                const handle = await parent.getDirectoryHandle(name, { create: true });
-                const connected = await connectDir(handle, { ask: true, initialize: true });
-                if (!connected) return;
-
-                snapshots = {};
-                activeSnap = null;
-                renderSnapshots();
-                previewTextOverride = false;
-                await templateSettingsReady;
-                await applySettings(structuredClone(templateSettings || defaultSettings || collectSettings()));
-                setBeforeHtml(bundledPreviewHtml);
-                updateStat();
-                await folderStorage.writeFiles({
-                    [SAVE_FILES.preview]: bundledPreviewHtml.trim() + '\n',
-                    [SAVE_FILES.settings]: JSON.stringify(
-                        { ...collectSettings(), _snapshots: {} }, null, 2) + '\n'
-                });
-                await separatorSourceReady;
-                if (separatorSource) {
-                    await folderStorage.writeText(SAVE_FILES.script, separatorSource);
-                }
-                setStatus(`${name} を新しい作業フォルダとして作成しました（CSSは設定変更または「CSSを保存」で作成）`, true);
-            } catch (e) {
-                if (e.name !== 'AbortError') setStatus('作業フォルダを作成できませんでした：' + e.message);
-            }
-        });
 
         $('reconnect').addEventListener('click', async () => {
             const handle = await folderStorage.recall();
@@ -2796,7 +2764,6 @@ B氏が持ち込んだ3冊の古びたノートには、かつての文学者た
 
         if (!ChromeFolderStorage.isSupported()) {
             $('pick-dir').disabled = true;
-            $('new-dir').disabled = true;
             setStatus('フォルダ保存には Chrome が必要です');
         }
 
