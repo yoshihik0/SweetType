@@ -2,7 +2,7 @@
 
 空のフォルダを作業フォルダに指定すると、ここにある `preview.html`・`settings.json`・`sweet-type.js` をそのフォルダへコピーします。
 
-`preview.html` を変更した後は、`node scripts/sync-template-preview.mjs` を実行して、`file://` で開いたときに使う埋め込み本文も更新してください。
+`preview.html` を変更した後は、`node scripts/sync-template-preview.mjs` を実行して、ファイルを直接開いた場合の新規フォルダ用本文も更新してください。
 
 - 既定本文を変える：`preview.html` を編集（複数の `<p>` を書ける）
 - 既定の組版設定を変える：`settings.json` を編集

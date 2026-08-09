@@ -8,8 +8,8 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link id="default-web-fonts" rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@200..900&family=Noto+Sans+JP:wght@100..900&display=swap">
-    <!-- file:// で template/preview.html を読めない場合の表示用バックアップ。
-         template/preview.html を正とし、scripts/sync-template-preview.mjs で生成する。 -->
+    <!-- 新規作業フォルダを file:// から作れるようにするための初期本文。
+         既存フォルダの本文読み込みに失敗した場合の表示には使用しない。 -->
     <template id="embedded-template-preview">
 <p>テキストの「形」に、果たして本当の意味などあるだらうか？</p>
 <p>彼は万年筆を置き、冷め切ったコーヒーを口に含む。「2026年の今日、私たちが試みてゐることは、未だかつて誰も夢みたことのない『構造の再定義』なのだ」。</p>
@@ -1117,7 +1117,7 @@
 
         .snapshots { display: flex; flex-wrap: wrap; gap: 4px; }
         .snapshots:empty::before {
-            content: 'まだありません';
+            content: 'スナップショットはまだありません。';
             color: #999; font-size: 11px;
         }
         .snapshots button { padding: 3px 8px; font-size: 11px; }
@@ -1740,23 +1740,31 @@
             return true;
         }
 
-        fetch(TEMPLATE_FILES.preview + '?t=' + Date.now())
+        const wait = (milliseconds) => new Promise((resolve) => setTimeout(resolve, milliseconds));
+        async function readWorkspacePreview() {
+            let lastError;
+            // ファイル作成・コピー直後でも読めるよう、最大約5秒待って再試行する。
+            for (let attempt = 0; attempt < 20; attempt += 1) {
+                try {
+                    return await folderStorage.readText(SAVE_FILES.preview);
+                } catch (error) {
+                    lastError = error;
+                    if (attempt < 19) await wait(250);
+                }
+            }
+            throw lastError;
+        }
+
+        const templatePreviewReady = fetch(TEMPLATE_FILES.preview + '?t=' + Date.now())
             .then((response) => {
                 if (!response.ok) throw new Error('テンプレート本文を読めませんでした');
                 return response.text();
             })
             .then((text) => {
                 bundledPreviewHtml = text;
-                return useExternalPreviewHtml(bundledPreviewHtml);
+                return true;
             })
-            .catch(() => {
-                // file:// では選択した作業フォルダから接続時に読む。
-                // 接続前は埋め込みテンプレート本文を表示する。
-                if (!previewTextOverride && !before.textContent) {
-                    setBeforeHtml(bundledPreviewHtml);
-                    updateStat();
-                }
-            });
+            .catch(() => false);
 
         // スライダーの定義：id, CSS変数, 単位, 表示の桁
         const VARS = [
@@ -2675,11 +2683,17 @@
                 connected = await folderStorage.connect(handle, { requestPermission: ask });
             } catch (e) {
                 $('reconnect').hidden = false;
+                if (!previewTextOverride) {
+                    setBeforeText('「前回のフォルダに再接続」を押してください。');
+                }
                 setStatus('フォルダへ接続できませんでした：' + e.message);
                 return false;
             }
             if (!connected) {
                 $('reconnect').hidden = false;
+                if (!previewTextOverride) {
+                    setBeforeText('「前回のフォルダに再接続」を押してください。');
+                }
                 setStatus('前回のフォルダは権限が切れています');
                 return false;
             }
@@ -2687,10 +2701,13 @@
             dirHandle = handle;
             $('reconnect').hidden = true;
 
-            // file:// で fetch できない場合も、選択フォルダ内の既定文を読める。
+            // 既存の作業フォルダでは、その中の preview.html だけを本文として使う。
+            // 読み込みに失敗しても、新規作成用テンプレートへ置き換えない。
+            let previewLoaded = false;
             if (!previewTextOverride) {
-                try { await useExternalPreviewHtml(await folderStorage.readText(SAVE_FILES.preview)); }
-                catch (_) { /* preview.html が無ければ現在の入力を保つ */ }
+                setBeforeText('文章を読み込んでいます…');
+                try { previewLoaded = await useExternalPreviewHtml(await readWorkspacePreview()); }
+                catch (_) { /* 設定ファイルの有無を確認してから、新規か既存かを判断する */ }
             }
 
             // file:// で fetch が拒否された場合は、選択フォルダ内の完全版CSSを使う。
@@ -2709,13 +2726,19 @@
                 const data = JSON.parse(text);
                 if (data._snapshots) { snapshots = sanitizedSnapshots(data._snapshots); renderSnapshots(); }
                 await applySettings(data);
+                if (!previewLoaded && !previewTextOverride) {
+                    setBeforeText('文章が読み込まれない場合は、ページを再読み込みしてください。');
+                }
                 setStatus(`${handle.name} の設定を読み込みました`, true);
             } catch (e) {
                 if (e.name === 'NotFoundError') {
                     if (initialize) {
-                        await initializeWorkspace();
+                        if (!await initializeWorkspace()) return false;
                         setStatus(`${handle.name} を作業フォルダとして設定しました`, true);
                     } else {
+                        if (!previewLoaded && !previewTextOverride) {
+                            setBeforeText('文章が読み込まれない場合は、ページを再読み込みしてください。');
+                        }
                         setStatus(`${handle.name} に保存します`, true);
                         scheduleSave();
                     }
@@ -2727,6 +2750,7 @@
         }
 
         async function initializeWorkspace() {
+            await templatePreviewReady;
             snapshots = {};
             activeSnap = null;
             renderSnapshots();
@@ -2744,6 +2768,7 @@
             if (separatorSource) {
                 await folderStorage.writeText(SAVE_FILES.script, separatorSource);
             }
+            return true;
         }
 
         $('pick-dir').addEventListener('click', async () => {
