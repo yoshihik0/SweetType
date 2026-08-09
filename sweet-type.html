@@ -1670,7 +1670,7 @@
         const textToPreviewHtml = (text) => text.replace(/\r\n?/g, '\n').split('\n')
             .filter(Boolean).map((line) => `<p>${escapeHtml(line)}</p>`).join('\n');
         function embeddedTemplatePreviewHtml() {
-            const source = $('embedded-template-preview').content.innerHTML.trim();
+            const source = $('embedded-template-preview').innerHTML.trim();
             if (!source) throw new Error('埋め込みテンプレート本文が空です');
             return source + '\n';
         }
