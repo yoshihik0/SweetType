@@ -4,6 +4,7 @@
 
 # SweetType が生成する案件フォルダ
 test/
+test-h/
 
 # 参照用のAdobe資料と、そこから移した作業用ファイル
 docs/*
