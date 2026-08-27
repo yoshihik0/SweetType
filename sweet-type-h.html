@@ -1,0 +1,713 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SweetType-h｜見出し文字組エディタ</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@100..900&family=Noto+Serif+JP:wght@200..900&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; }
+    :root { color-scheme: light; font-family: system-ui, -apple-system, sans-serif; color: #111; background: #fff; }
+    body { height: 100vh; margin: 0; display: flex; flex-direction: column; overflow: hidden; font-size: 13px; }
+    header { flex: none; display: flex; align-items: center; gap: 16px; min-height: 58px; padding: 10px 20px; border-bottom: 1px solid #e3e3e3; background: #fff; }
+    .brand { flex: none; line-height: 1.1; white-space: nowrap; }
+    .brand h1 { margin: 0; font-size: 20px; font-weight: 700; letter-spacing: -.03em; }
+    .brand p { margin: 3px 0 0; color: #777; font-size: 10px; letter-spacing: .04em; }
+    .header-snapshots { flex: 1 1 auto; min-width: 100px; }
+    .save-bar { display: flex; align-items: center; gap: 8px; margin-left: auto; white-space: nowrap; }
+    #status { color: #666; font-size: 11px; }
+    #status[data-ok] { color: #1a7f37; }
+    button, input, textarea, select { font: inherit; color: inherit; }
+    button { padding: 6px 9px; border: 1px solid #ccc; border-radius: 4px; background: #fff; cursor: pointer; font-size: 12px; }
+    button:hover { background: #f6f6f6; }
+    button.primary, .choice button.active { border-color: #111; background: #111; color: #fff; }
+    input, textarea, select { width: 100%; min-width: 0; padding: 6px 8px; border: 1px solid #ccc; border-radius: 4px; background: #fff; font-size: 12px; }
+    input[type="range"] { padding: 0; }
+    textarea { min-height: 82px; resize: vertical; line-height: 1.55; }
+    .layout { flex: 1; min-height: 0; display: grid; grid-template-columns: 265px minmax(310px, 1fr) minmax(590px, 640px); }
+    .settings-panel, .properties-panel { min-height: 0; background: #fff; }
+    .settings-panel { padding: 18px 20px 36px; border-right: 1px solid #e3e3e3; overflow-y: auto; }
+    .preview-pane { min-width: 0; min-height: 0; padding: 18px 20px; display: flex; flex-direction: column; border-right: 1px solid #e3e3e3; background: #fafafa; }
+    .properties-panel { display: flex; flex-direction: column; overflow: hidden; }
+    .settings-panel section { margin: 0 0 20px; }
+    .settings-panel h2, .preview-label, .panel-title { margin: 0 0 9px; color: #888; font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; }
+    label { display: block; margin: 8px 0 3px; font-size: 11px; font-weight: 500; }
+    details { margin-top: 7px; border-bottom: 1px solid #eee; }
+    details > summary { padding: 8px 0; cursor: pointer; font-size: 11px; font-weight: 600; }
+    details[open] { padding-bottom: 9px; }
+    details:not([open]) > *:not(summary) { display: none; }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
+    .grid label { margin-top: 0; }
+    .base-color-row { display: grid; grid-template-columns: 42px 1fr; align-items: center; gap: 8px; }
+    .base-color-row input[type="color"] { width: 42px; height: 29px; padding: 2px; }
+    .choice, .actions { display: flex; flex-wrap: wrap; gap: 6px; }
+    .choice button { flex: 1; }
+    .help { margin: 5px 0 0; color: #999; font-size: 10px; line-height: 1.5; }
+    .preview-label { flex: none; margin-bottom: 8px; }
+    .preview { flex: 1; min-height: 0; display: grid; place-items: center; padding: clamp(24px, 4vw, 64px); border: 1px solid #e3e3e3; background: #fff; overflow: auto; }
+    #heading { margin: 0; white-space: pre; font-size: 72px; font-weight: 700; line-height: 1.15; font-family: "Noto Serif JP", serif; }
+    #heading.vertical { writing-mode: vertical-rl; }
+    #heading > span { display: inline-block; white-space: pre; }
+    .code-details { flex: none; margin: 12px 0 0; padding: 0; border: 0; }
+    .code-details > summary { display: flex; align-items: center; min-height: 30px; color: #888; letter-spacing: .08em; text-transform: uppercase; }
+    .code-details > summary::marker { font-size: 9px; }
+    .code-details > summary #copy { margin-left: auto; padding: 3px 7px; font-size: 9px; font-weight: 400; letter-spacing: 0; text-transform: none; }
+    .code-output { height: 112px; min-height: 112px; resize: vertical; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 10px; }
+    .properties-head { flex: none; padding: 17px 16px 10px; border-bottom: 1px solid #eee; }
+    .properties-head .panel-title { margin-bottom: 3px; }
+    .table-wrap { flex: 1; min-height: 0; overflow: auto; }
+    table { width: 100%; min-width: 625px; border-collapse: collapse; table-layout: fixed; font-size: 11px; }
+    th, td { padding: 6px 4px; border-bottom: 1px solid #eee; text-align: left; vertical-align: middle; }
+    th { position: sticky; top: 0; z-index: 2; background: #f7f7f7; color: #777; font-size: 10px; font-weight: 600; }
+    th:nth-child(1), td.index { width: 30px; text-align: center; }
+    th:nth-child(2), td.char { width: 38px; text-align: center; }
+    th:nth-child(3) { width: 150px; }
+    th:nth-child(4) { width: 132px; }
+    th:nth-child(5) { width: 56px; }
+    th:nth-child(6), th:nth-child(7), th:nth-child(8) { width: 62px; }
+    td.char { font-size: 18px; }
+    td.index { color: #999; }
+    td input, td select { padding: 4px 5px; font-size: 10px; }
+    td select { width: 124px; }
+    .color-control { display: flex; align-items: center; gap: 2px; }
+    .color-control input[type="color"] { width: 34px; height: 25px; padding: 2px; }
+    .color-control button { padding: 3px 5px; border: 0; color: #999; font-size: 10px; }
+    .spacing-control.is-line-end { grid-template-columns: 1fr; color: #aaa; font-size: 9px; text-align: center; }
+    .spacing-control { display: grid; grid-template-columns: 1fr 43px; align-items: center; gap: 4px; }
+    .spacing-value { color: #777; font-size: 9px; font-variant-numeric: tabular-nums; text-align: right; }
+    .snapshots { display: flex; flex-wrap: wrap; gap: 4px; }
+    .snapshots:empty::before { content: 'スナップショットはまだありません。'; color: #aaa; font-size: 10px; }
+    .snapshot-item { display: inline-flex; }
+    .snapshots button { padding: 3px 7px; font-size: 10px; border-radius: 4px 0 0 4px; }
+    .snapshots button.active { border-color: #111; background: #111; color: #fff; }
+    .snapshots .snapshot-delete { padding: 3px 5px; border-left: 0; border-radius: 0 4px 4px 0; color: #999; }
+    @media (max-width: 1200px) { .layout { grid-template-columns: 245px minmax(280px, 1fr) 520px; } }
+    @media (max-width: 880px) {
+      body { height: auto; overflow: visible; }
+      header { align-items: flex-start; flex-wrap: wrap; }
+      .header-snapshots { order: 3; flex-basis: 100%; }
+      .layout { display: flex; flex-direction: column; }
+      .settings-panel, .properties-panel { overflow: visible; }
+      .preview-pane { min-height: 55vh; order: -1; }
+      .table-wrap { max-height: 70vh; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand"><h1>SweetType-h</h1><p>見出し文字組エディタ</p></div>
+    <div id="snapshots" class="snapshots header-snapshots"></div>
+    <div class="save-bar">
+      <span id="status">作業フォルダが未設定です</span>
+      <button id="pickDirectory">作業フォルダを指定</button>
+      <button id="reconnect" hidden>前回のフォルダに再接続</button>
+      <button id="saveToFolder">JSを保存</button>
+    </div>
+  </header>
+  <main class="layout">
+    <aside class="settings-panel">
+      <section>
+        <h2>スナップショット</h2>
+        <div class="actions"><input id="snapshotName" placeholder="名前" style="flex:1;min-width:130px"><button id="saveSnapshot">現在の設定を保存</button></div>
+        <p class="help">名前をクリックすると文字組設定を切り替えます。見出しの文字列は変更しません。</p>
+      </section>
+      <section>
+        <h2>見出し</h2>
+        <label for="headingId">見出しID</label><input id="headingId" value="title" pattern="[a-z0-9_-]+" placeholder="title">
+        <p class="help">例：title → <code>data-sweet-type-h-title</code></p>
+        <label for="text">文字</label>
+        <textarea id="text">文字を、丁寧に。</textarea>
+        <p class="help">改行にも対応します。設定は文字番号（1文字目、2文字目…）で保持します。</p>
+      </section>
+      <section>
+        <h2>組方向</h2>
+        <div class="choice"><button data-writing="horizontal" class="active">横組み</button><button data-writing="vertical">縦組み</button></div>
+      </section>
+      <section>
+        <h2>全体の設定</h2>
+        <label for="font">フォント</label><select id="font"></select>
+        <div class="grid">
+          <div><label for="size">サイズ（px）</label><input id="size" type="number" value="72" min="1" step="1"></div>
+          <div><label for="weight">ウェイト</label><input id="weight" type="number" value="700" min="100" max="900" step="1"></div>
+        </div>
+        <label for="color">文字色</label><div class="base-color-row"><input id="color" type="color" value="#111111"><output id="colorValue">#111111</output></div>
+        <label for="lineHeight">行送り</label><input id="lineHeight" value="1.15">
+      </section>
+      <section>
+        <h2>フォントを追加</h2>
+        <details>
+          <summary>PCのフォント</summary>
+          <label for="fontFamily">font-family</label>
+          <input id="fontFamily" placeholder='"ヒラギノ角ゴシック", sans-serif'>
+          <div class="actions" style="margin-top:7px"><button id="addLocalFont">選択肢に追加</button></div>
+          <p class="help" id="localFontResult">PCにインストール済みのフォント名をCSSのfont-family形式で入力します。</p>
+        </details>
+        <details style="margin-top:9px">
+          <summary>ウェブフォント</summary>
+          <label for="webFontUrl">Google FontsのCSS URL</label>
+          <input id="webFontUrl" placeholder="CSS URL、または <link> タグを貼り付け">
+          <div class="actions" style="margin-top:7px"><button id="loadWebFont">読み込む</button></div>
+          <p class="help" id="webFontResult"></p>
+        </details>
+      </section>
+      <section>
+        <details>
+          <summary class="panel-title">getKerning の読み込み</summary>
+          <textarea id="kerning" placeholder='例: ["-0.12em", "-0.18em", "-0.08em"]'></textarea>
+          <div class="actions" style="margin-top:6px"><button id="applyKerning">字間を反映</button></div>
+          <p class="help">Illustrator の配列を貼り付けます。各値は、その文字の後ろの字間です。</p>
+        </details>
+      </section>
+      <section>
+        <details open>
+          <summary class="panel-title">書き出したコードから再現</summary>
+          <textarea id="importCode" placeholder="埋め込みコード、または sweet-type-h-data-title.js の内容を貼り付け"></textarea>
+          <div class="actions" style="margin-top:6px"><button id="restoreCode">コードを読み込む</button></div>
+          <p class="help">見出し文字・改行・フォント・文字別設定を読み戻します。</p>
+        </details>
+      </section>
+      <section>
+        <details>
+          <summary class="panel-title">ブラウザ内の予備保存</summary>
+          <div class="actions"><button id="save">ブラウザに保存</button><button id="load">保存を読み込み</button><button id="reset">初期化</button></div>
+          <p class="help">作業フォルダが使えない場合の予備保存です。</p>
+        </details>
+      </section>
+    </aside>
+    <section class="preview-pane">
+      <h2 class="preview-label">プレビュー</h2>
+      <div class="preview"><h2 id="heading"></h2></div>
+      <details class="code-details">
+        <summary><span>埋め込みコード</span><button id="copy" type="button">コピー</button></summary>
+        <textarea id="output" class="code-output" readonly></textarea>
+      </details>
+    </section>
+    <section class="properties-panel">
+      <div class="properties-head"><h2 class="panel-title">文字ごとのプロパティ</h2><p class="help">文字番号の順に、字間・フォント・色・サイズ・ウェイト・上下位置を設定します。</p></div>
+      <div class="table-wrap"><table><thead><tr><th>番号</th><th>文字</th><th>字間</th><th>フォント</th><th>色</th><th>サイズ</th><th>太さ</th><th>上下<br><small>＋で上</small></th></tr></thead><tbody id="rows"></tbody></table></div>
+    </section>
+  </main>
+  <script>
+    (() => {
+      'use strict';
+      const $ = (id) => document.getElementById(id);
+      const FONT_OPTIONS = [
+        { value: '"Noto Serif JP", serif', label: 'Noto Serif JP（可変・ウェブフォント）' },
+        { value: '"Noto Sans JP", sans-serif', label: 'Noto Sans JP（可変・ウェブフォント）' },
+        { value: '"Hiragino Mincho ProN", "Yu Mincho", serif', label: 'ヒラギノ明朝' },
+        { value: '"Hiragino Sans", "Yu Gothic", sans-serif', label: 'ヒラギノ角ゴ' },
+        { value: '"Yu Mincho", "YuMincho", serif', label: '游明朝' },
+        { value: '"Yu Gothic", "YuGothic", sans-serif', label: '游ゴシック' },
+        { value: 'serif', label: 'serif（既定）' },
+        { value: 'sans-serif', label: 'sans-serif（既定）' }
+      ];
+      const DEFAULT_FONT_COUNT = FONT_OPTIONS.length;
+      const SAVE_FILES = { settings: 'sweet-type-h-settings.json', engine: 'sweet-type-h-engine.js', sample: 'sample.html' };
+      const state = { writing: 'horizontal', characters: [] };
+      let snapshots = Object.create(null);
+      let activeSnapshot = null;
+      let directoryHandle = null;
+      let folderSaveTimer = null;
+      const defaults = () => ({ spacing: 0, font: '', color: '', size: '', weight: '', y: 0 });
+      const textCharacters = () => [...$('text').value].filter((char) => char !== '\r' && char !== '\n');
+      const esc = (value) => String(value).replace(/[&<>"']/g, (c) => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
+      const valueOr = (value, fallback) => value === '' || value == null ? fallback : value;
+      const numberValue = (value, fallback = 0) => { const n = parseFloat(value); return Number.isFinite(n) ? n : fallback; };
+      const headingId = () => $('headingId').value.trim().toLowerCase().replace(/[^a-z0-9_-]+/g, '-').replace(/^-+|-+$/g, '') || 'title';
+      const dataAttribute = () => `data-sweet-type-h-${headingId()}`;
+
+      class FolderStorage {
+        constructor() { this.directoryHandle = null; this.writeQueue = Promise.resolve(); }
+        static isSupported() { return typeof window.showDirectoryPicker === 'function'; }
+        openDb() {
+          return new Promise((resolve, reject) => {
+            const request = indexedDB.open('sweet-type-h-tool', 1);
+            request.onupgradeneeded = () => { if (!request.result.objectStoreNames.contains('handles')) request.result.createObjectStore('handles'); };
+            request.onsuccess = () => resolve(request.result);
+            request.onerror = () => reject(request.error);
+          });
+        }
+        async remember(handle) {
+          const db = await this.openDb();
+          try { await new Promise((resolve, reject) => { const tx = db.transaction('handles', 'readwrite'); tx.objectStore('handles').put(handle, 'sweet-type-h-dir'); tx.oncomplete = resolve; tx.onerror = () => reject(tx.error); }); }
+          finally { db.close(); }
+        }
+        async recall() {
+          try {
+            const db = await this.openDb();
+            try { return await new Promise((resolve, reject) => { const tx = db.transaction('handles', 'readonly'); const request = tx.objectStore('handles').get('sweet-type-h-dir'); request.onsuccess = () => resolve(request.result || null); request.onerror = () => reject(request.error); }); }
+            finally { db.close(); }
+          } catch (_) { return null; }
+        }
+        async connect(handle, ask) {
+          if (!handle) return false;
+          const options = { mode: 'readwrite' };
+          let permission = await handle.queryPermission(options);
+          if (permission !== 'granted' && ask) permission = await handle.requestPermission(options);
+          if (permission !== 'granted') return false;
+          this.directoryHandle = handle;
+          try { await this.remember(handle); } catch (_) {}
+          return true;
+        }
+        async pick() {
+          const options = { id: 'sweet-type-h-tool', mode: 'readwrite' };
+          if (this.directoryHandle) options.startIn = this.directoryHandle;
+          try { return await showDirectoryPicker(options); }
+          catch (error) { if (!(error instanceof TypeError) || !options.startIn) throw error; delete options.startIn; return showDirectoryPicker(options); }
+        }
+        async readText(name) { const handle = await this.directoryHandle.getFileHandle(name); return (await handle.getFile()).text(); }
+        async writeText(name, contents) { const handle = await this.directoryHandle.getFileHandle(name, { create: true }); const writable = await handle.createWritable(); await writable.write(contents); await writable.close(); }
+        writeFiles(files) {
+          const write = async () => { for (const [name, contents] of Object.entries(files)) await this.writeText(name, contents); };
+          const pending = this.writeQueue.catch(() => {}).then(write);
+          this.writeQueue = pending;
+          return pending;
+        }
+      }
+      const folderStorage = new FolderStorage();
+
+      function populateFonts() {
+        $('font').replaceChildren(...FONT_OPTIONS.map(({ value, label }) => new Option(label, value)));
+      }
+      function fontOptions(selected) {
+        return [{ value: '', label: '全体設定を継承' }, ...FONT_OPTIONS].map(({ value, label }) => `<option value="${esc(value)}"${value === selected ? ' selected' : ''}>${esc(label)}</option>`).join('');
+      }
+      function addFontOption(value, label) {
+        value = (value || '').trim();
+        if (!value) return false;
+        if (!FONT_OPTIONS.some((option) => option.value === value)) FONT_OPTIONS.push({ value, label: label || value });
+        const selected = $('font').value;
+        populateFonts();
+        $('font').value = FONT_OPTIONS.some((option) => option.value === selected) ? selected : value;
+        renderRows();
+        return true;
+      }
+      function prepareWebFont(url, family) {
+        if (url && ![...document.querySelectorAll('link[rel="stylesheet"]')].some((link) => link.href === new URL(url, location.href).href)) {
+          const link = document.createElement('link');
+          link.rel = 'stylesheet'; link.href = url; link.dataset.sweetTypeHWebFont = '';
+          document.head.appendChild(link);
+        }
+        const value = `"${family}", serif`;
+        addFontOption(value, `${family}（追加）`);
+        return value;
+      }
+      function parseWebFontInput(raw) {
+        const urls = [...raw.matchAll(/https?:\/\/[^\s"'<>]+/g)].map((match) => match[0].replace(/&amp;/g, '&'));
+        const url = urls.find((item) => /[?&]family=/.test(item)) || urls[urls.length - 1] || null;
+        if (!url) return { url: null, family: null };
+        let family = null;
+        try { const parameter = new URL(url).searchParams.get('family'); if (parameter) family = parameter.split(':')[0].replace(/\+/g, ' ').trim(); } catch (_) {}
+        return { url, family };
+      }
+      function syncCharacters() {
+        const count = textCharacters().length;
+        state.characters = Array.from({ length: count }, (_, i) => ({ ...defaults(), ...(state.characters[i] || {}) }));
+      }
+      function lineEndIndexes() {
+        const indexes = new Set();
+        const source = [...$('text').value].filter((char) => char !== '\r');
+        let propertyIndex = -1;
+        source.forEach((char, sourceIndex) => {
+          if (char === '\n') return;
+          propertyIndex += 1;
+          if (source[sourceIndex + 1] === '\n' || source[sourceIndex + 1] === undefined) indexes.add(propertyIndex);
+        });
+        return indexes;
+      }
+      function renderRows() {
+        $('rows').innerHTML = '';
+        const lineEnds = lineEndIndexes();
+        textCharacters().forEach((char, i) => {
+          const item = state.characters[i];
+          const color = /^#[0-9a-f]{6}$/i.test(item.color || '') ? item.color : '#111111';
+          const spacingCell = lineEnds.has(i)
+            ? '<div class="spacing-control is-line-end">行末</div>'
+            : `<div class="spacing-control"><input type="range" min="-1.00" max="1.00" step="0.01" value="${numberValue(item.spacing)}" data-index="${i}" data-field="spacing"><span class="spacing-value">${formatSpacing(item.spacing)}</span></div>`;
+          const tr = document.createElement('tr');
+          tr.innerHTML = `<td class="index">${i + 1}</td><td class="char">${esc(char)}</td>
+            <td>${spacingCell}</td>
+            <td><select data-index="${i}" data-field="font">${fontOptions(item.font)}</select></td>
+            <td><div class="color-control"><input type="color" value="${color}" data-index="${i}" data-field="color" title="文字色"><button type="button" data-clear-color="${i}" title="全体の色を継承">×</button></div></td>
+            <td><input type="number" min="1" step="1" data-index="${i}" data-field="size" value="${esc(item.size)}" placeholder="継承"></td>
+            <td><input type="number" min="100" max="900" step="1" data-index="${i}" data-field="weight" value="${esc(item.weight)}" placeholder="継承"></td>
+            <td><input type="number" step="1" data-index="${i}" data-field="y" value="${numberValue(item.y)}" title="正の値で上へ移動"></td>`;
+          $('rows').appendChild(tr);
+        });
+        $('rows').querySelectorAll('input, select').forEach((input) => input.addEventListener('input', () => {
+          const item = state.characters[Number(input.dataset.index)];
+          item[input.dataset.field] = input.dataset.field === 'spacing' || input.dataset.field === 'y' ? numberValue(input.value) : input.value;
+          if (input.dataset.field === 'spacing') input.nextElementSibling.textContent = formatSpacing(input.value);
+          renderHeading(); updateOutput();
+        }));
+        $('rows').querySelectorAll('input[data-field="size"], input[data-field="weight"]').forEach((input) => {
+          const inheritedValue = () => input.dataset.field === 'size' ? numberValue($('size').value, 72) : numberValue($('weight').value, 700);
+          const setFromInherited = (direction) => {
+            const step = numberValue(input.step, 1);
+            const min = input.min === '' ? -Infinity : numberValue(input.min);
+            const max = input.max === '' ? Infinity : numberValue(input.max);
+            input.value = String(Math.max(min, Math.min(max, inheritedValue() + direction * step)));
+            input.dispatchEvent(new Event('input', { bubbles: true }));
+          };
+          input.addEventListener('keydown', (event) => {
+            if (input.value !== '' || (event.key !== 'ArrowUp' && event.key !== 'ArrowDown')) return;
+            event.preventDefault();
+            setFromInherited(event.key === 'ArrowUp' ? 1 : -1);
+          });
+          input.addEventListener('pointerdown', (event) => {
+            if (input.value !== '' || event.offsetX < input.clientWidth - 18) return;
+            input.value = String(inheritedValue());
+          });
+        });
+        $('rows').querySelectorAll('[data-clear-color]').forEach((button) => button.addEventListener('click', () => {
+          state.characters[Number(button.dataset.clearColor)].color = '';
+          render(); scheduleFolderSave();
+        }));
+      }
+      function formatSpacing(value) { const n = numberValue(value); return `${n > 0 ? '+' : ''}${n.toFixed(2)}em`; }
+      function headingParts() {
+        let propertyIndex = 0;
+        const lineEnds = lineEndIndexes();
+        return [...$('text').value].map((char) => {
+          if (char === '\r') return '';
+          if (char === '\n') return '<br>';
+          const index = propertyIndex++;
+          const item = state.characters[index] || defaults();
+          const spacing = lineEnds.has(index) ? 0 : numberValue(item.spacing);
+          return `<span style="letter-spacing:${spacing}em;font-family:${esc(valueOr(item.font, $('font').value || 'inherit'))};color:${esc(item.color || 'inherit')};font-size:${item.size ? `${numberValue(item.size)}px` : 'inherit'};font-weight:${esc(valueOr(item.weight, $('weight').value || 'normal'))};transform:translateY(${-numberValue(item.y)}px)">${esc(char)}</span>`;
+        }).join('');
+      }
+      function renderHeading() {
+        const heading = $('heading');
+        heading.classList.toggle('vertical', state.writing === 'vertical');
+        heading.style.fontFamily = $('font').value || 'inherit';
+        heading.style.fontSize = `${Number($('size').value) || 1}px`;
+        heading.style.fontWeight = $('weight').value || 'normal';
+        heading.style.color = $('color').value || '#111111';
+        heading.style.lineHeight = $('lineHeight').value || 'normal';
+        heading.innerHTML = headingParts();
+      }
+      function render() {
+        renderHeading();
+        renderRows();
+        updateOutput();
+      }
+      function readKerning() {
+        try {
+          const raw = $('kerning').value.trim();
+          const parsed = raw.startsWith('[') && raw.endsWith(']')
+            ? raw.slice(1, -1).split(',').map((part) => part.trim().replace(/^['"]|['"]$/g, '')).filter(Boolean)
+            : null;
+          if (!Array.isArray(parsed)) throw new Error('配列ではありません');
+          return parsed.map((entry) => Math.max(-1, Math.min(1, numberValue(String(entry).replace(/em$/i, '')))));
+        } catch (e) { setStatus(`カーニング配列を読めません：${e.message}`, false); return null; }
+      }
+      function applyKerning() {
+        const values = readKerning(); if (!values) return;
+        state.characters.forEach((item, i) => { if (values[i] != null) item.spacing = values[i]; });
+        render(); setStatus(`${Math.min(values.length, state.characters.length)}文字分の字間を反映しました`, true);
+      }
+      function collect() { return { version: 5, writing: state.writing, font: $('font').value, color: $('color').value || '#111111', size: numberValue($('size').value, 72), weight: numberValue($('weight').value, 700), lineHeight: numberValue($('lineHeight').value, 1.15), characters: state.characters.map((item) => ({ spacing: numberValue(item.spacing), font: item.font || '', color: item.color || '', size: item.size === '' ? '' : numberValue(item.size), weight: item.weight || '', y: numberValue(item.y) })) }; }
+      function collectEditorSettings() { return { webFontUrl: $('webFontUrl').value, fontOptions: FONT_OPTIONS.slice(DEFAULT_FONT_COUNT).map((option) => ({ ...option })) }; }
+      function collectSnapshot() { return { settings: collect(), editor: collectEditorSettings() }; }
+      function browserData() { return { headingId: headingId(), text: $('text').value, settings: collect(), editor: collectEditorSettings(), snapshots }; }
+      function persistBrowserData() { localStorage.setItem('sweet-type-h-settings', JSON.stringify(browserData())); }
+      function folderData() { return { version: 3, headingId: headingId(), text: $('text').value, settings: collect(), editor: collectEditorSettings(), snapshots }; }
+      function textFromElement(root) {
+        const parts = [];
+        root.childNodes.forEach(function read(node) {
+          if (node.nodeType === 3) parts.push(node.nodeValue);
+          else if (node.nodeType === 1 && node.tagName === 'BR') parts.push('\n');
+          else node.childNodes.forEach(read);
+        });
+        return parts.join('');
+      }
+      function engineScript() {
+        return `/*!
+ * SweetType-h engine: character-by-character heading typesetting runtime.
+ * Usage: SweetTypeH.register('title', settings);
+ */
+(function (global) {
+  'use strict';
+  function value(v, fallback) { return v === '' || v == null ? fallback : v; }
+  function numberValue(v, fallback) {
+    var n = parseFloat(v);
+    return Number.isFinite(n) ? n : (fallback || 0);
+  }
+  var registry = Object.create(null);
+  function normalizeId(id) {
+    return String(id || 'title').trim().toLowerCase().replace(/[^a-z0-9_-]+/g, '-').replace(/^-+|-+$/g, '') || 'title';
+  }
+  function apply(target, settings) {
+    var root = typeof target === 'string' ? document.querySelector(target) : target;
+    if (!root || !settings) return root;
+    var baseFont = value(settings.font, getComputedStyle(root).fontFamily);
+    var baseWeight = value(settings.weight, getComputedStyle(root).fontWeight);
+    var writing = settings.writing === 'vertical' ? 'vertical' : 'horizontal';
+    var chars = Array.isArray(settings.characters) ? settings.characters : [];
+    root.classList.toggle('sweet-type-h--vertical', writing === 'vertical');
+    root.style.writingMode = writing === 'vertical' ? 'vertical-rl' : 'horizontal-tb';
+    root.style.fontFamily = baseFont;
+    if (settings.color) root.style.color = settings.color;
+    if (settings.size != null && settings.size !== '') root.style.fontSize = /[a-z%]/i.test(String(settings.size)) ? settings.size : String(settings.size) + 'px';
+    root.style.fontWeight = baseWeight;
+    if (settings.lineHeight != null && settings.lineHeight !== '') root.style.lineHeight = settings.lineHeight;
+    var source = [];
+    Array.from(root.childNodes).forEach(function read(node) {
+      if (node.nodeType === 3) Array.from(node.nodeValue).forEach(function (char) { source.push(char); });
+      else if (node.nodeType === 1 && node.tagName === 'BR') source.push('\\n');
+      else Array.from(node.childNodes || []).forEach(read);
+    });
+    root.replaceChildren();
+    var propertyIndex = 0;
+    source.forEach(function (char, sourceIndex) {
+      if (char === '\\r') return;
+      if (char === '\\n') { root.appendChild(document.createElement('br')); return; }
+      var item = chars[propertyIndex] || {}, span = document.createElement('span');
+      propertyIndex += 1;
+      span.textContent = char;
+      span.dataset.sweetTypeHIndex = String(propertyIndex);
+      span.style.display = 'inline-block';
+      var lineEnd = source[sourceIndex + 1] === '\\n' || source[sourceIndex + 1] === undefined;
+      if (item.spacing && !lineEnd) span.style.letterSpacing = numberValue(item.spacing) + 'em';
+      if (item.font) span.style.fontFamily = item.font;
+      if (item.color) span.style.color = item.color;
+      if (item.size) span.style.fontSize = numberValue(item.size) + 'px';
+      if (item.weight) span.style.fontWeight = item.weight;
+      var y = numberValue(item.y);
+      if (y) span.style.transform = 'translateY(' + (-y) + 'px)';
+      root.appendChild(span);
+    });
+    return root;
+  }
+  function applyRegistered(id) {
+    var key = normalizeId(id), settings = registry[key];
+    if (!settings) return 0;
+    var selector = '[data-sweet-type-h-' + key + ']';
+    var roots = document.querySelectorAll(selector);
+    roots.forEach(function (root) { apply(root, settings); });
+    return roots.length;
+  }
+  function register(id, settings) {
+    var key = normalizeId(id);
+    registry[key] = settings;
+    if (document.readyState !== 'loading') applyRegistered(key);
+    return key;
+  }
+  function init() { Object.keys(registry).forEach(applyRegistered); }
+  global.SweetTypeH = { apply: apply, register: register, applyRegistered: applyRegistered, settings: registry };
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init, { once: true });
+}(window));
+`;
+      }
+      // 配布用エンジンは template の原本をコピーする。file:// で取得できない場合だけ内蔵版を使う。
+      const engineSourceReady = fetch('template/sweet-type-h-engine.js?t=' + Date.now())
+        .then((response) => {
+          if (!response.ok) throw new Error('SweetType-hエンジンを読めませんでした');
+          return response.text();
+        })
+        .catch(() => engineScript());
+      function dataScript() { return `/* SweetType-h data: ${headingId()} */\nSweetTypeH.register(${JSON.stringify(headingId())}, ${JSON.stringify(collect(), null, 2)});\n`; }
+      function dataFileName() { return `sweet-type-h-data-${headingId()}.js`; }
+      function sampleHtml() {
+        const webFont = $('webFontUrl').value.trim();
+        const fontLink = webFont ? `  <link rel="stylesheet" href="${esc(webFont)}">\n` : '';
+        return `<!doctype html>\n<html lang="ja">\n<head>\n  <meta charset="utf-8">\n${fontLink}  <title>SweetType-h sample</title>\n</head>\n<body>\n  <h1 ${dataAttribute()}>${$('text').value.split('\n').map(esc).join('<br>')}</h1>\n  <script src="${SAVE_FILES.engine}"><\/script>\n  <script src="${dataFileName()}"><\/script>\n</body>\n</html>\n`;
+      }
+      function restoreFromCode(raw) {
+        const registerMatch = raw.match(/SweetTypeH\.register\s*\(\s*(['"])([a-z0-9_-]+)\1\s*,\s*({[\s\S]*?})\s*\)\s*;/i);
+        const settingsMatch = registerMatch
+          || raw.match(/SweetTypeH\.apply\s*\(\s*(['"])[^'"]+\1\s*,\s*({[\s\S]*?})\s*\)\s*;/)
+          || raw.match(/var\s+settings\s*=\s*({[\s\S]*?})\s*;\s*function\s+value/);
+        if (!settingsMatch) throw new Error('SweetTypeHの設定を見つけられませんでした');
+        if (registerMatch) $('headingId').value = registerMatch[2];
+        const settingsText = registerMatch ? registerMatch[3] : (settingsMatch[2] || settingsMatch[1]);
+        const settingsValue = JSON.parse(settingsText);
+        const documentValue = new DOMParser().parseFromString(raw, 'text/html');
+        const heading = documentValue.querySelector(`#my-heading, [${dataAttribute()}]`);
+        if (heading) $('text').value = textFromElement(heading);
+        const fontLink = [...documentValue.querySelectorAll('link[rel="stylesheet"]')].find((link) => /[?&]family=/.test(link.getAttribute('href') || ''));
+        if (fontLink) {
+          $('webFontUrl').value = fontLink.getAttribute('href');
+          const parsed = parseWebFontInput($('webFontUrl').value);
+          if (parsed.url && parsed.family) prepareWebFont(parsed.url, parsed.family);
+        }
+        applyData(settingsValue);
+        scheduleFolderSave();
+      }
+      async function saveFolderNow() {
+        if (!directoryHandle) return;
+        try {
+          await folderStorage.writeFiles({
+            [SAVE_FILES.settings]: JSON.stringify(folderData(), null, 2) + '\n'
+          });
+          setStatus(`${directoryHandle.name} に保存しました（${new Date().toLocaleTimeString('ja-JP')}）`, true);
+        } catch (error) { setStatus(`保存できませんでした：${error.message}`, false); }
+      }
+      async function saveDeliverables() {
+        if (!directoryHandle) return;
+        const files = {
+          [SAVE_FILES.settings]: JSON.stringify(folderData(), null, 2) + '\n',
+          [SAVE_FILES.engine]: await engineSourceReady,
+          [SAVE_FILES.sample]: sampleHtml()
+        };
+        files[dataFileName()] = dataScript();
+        await folderStorage.writeFiles(files);
+        setStatus(`${directoryHandle.name} にエンジン・${dataFileName()}・sample.htmlを保存しました（${new Date().toLocaleTimeString('ja-JP')}）`, true);
+      }
+      function scheduleFolderSave() {
+        if (!directoryHandle) return;
+        setStatus('保存中…');
+        clearTimeout(folderSaveTimer);
+        folderSaveTimer = setTimeout(saveFolderNow, 1000);
+      }
+      async function connectDirectory(handle, ask) {
+        try {
+          const connected = await folderStorage.connect(handle, ask);
+          if (!connected) { $('reconnect').hidden = false; setStatus('前回のフォルダは権限が切れています', false); return false; }
+          directoryHandle = handle;
+          $('reconnect').hidden = true;
+          let loaded = false;
+          try {
+            const saved = JSON.parse(await folderStorage.readText(SAVE_FILES.settings));
+            if (saved.headingId) $('headingId').value = saved.headingId;
+            if (saved.text != null) $('text').value = String(saved.text);
+            applyEditorSettings(saved.editor);
+            snapshots = Object.assign(Object.create(null), saved.snapshots || {});
+            activeSnapshot = null;
+            applyData(saved.settings || saved);
+            renderSnapshots();
+            loaded = true;
+          } catch (error) { if (error.name !== 'NotFoundError') throw error; }
+          if (loaded) setStatus(`${handle.name} の設定を読み込みました`, true);
+          else { syncCharacters(); render(); await saveFolderNow(); setStatus(`${handle.name} を作業フォルダに設定しました`, true); }
+          return true;
+        } catch (error) { setStatus(`フォルダへ接続できませんでした：${error.message}`, false); $('reconnect').hidden = false; return false; }
+      }
+      function updateOutput() {
+        const data = collect();
+        const htmlText = $('text').value.split('\n').map(esc).join('<br>');
+        const webFont = $('webFontUrl').value.trim();
+        const webFontLink = webFont ? `<link rel="stylesheet" href="${esc(webFont)}">\n` : '';
+        $('output').value = `${webFontLink}<h1 ${dataAttribute()}>${htmlText}</h1>\n<script src="${SAVE_FILES.engine}"><\/script>\n<script>\nSweetTypeH.register(${JSON.stringify(headingId())}, ${JSON.stringify(data, null, 2)});\n<\/script>`;
+      }
+      function setStatus(text, ok) { $('status').textContent = text; if (ok) $('status').setAttribute('data-ok', ''); else $('status').removeAttribute('data-ok'); }
+      function applyData(data) {
+        if (!data || !Array.isArray(data.characters)) throw new Error('SweetType-h の設定ではありません');
+        if (data.font && !FONT_OPTIONS.some((option) => option.value === data.font)) addFontOption(data.font, `${data.font}（追加）`);
+        $('font').value = data.font || FONT_OPTIONS[0].value; $('color').value = /^#[0-9a-f]{6}$/i.test(data.color || '') ? data.color : '#111111'; $('colorValue').textContent = $('color').value; $('size').value = data.size || 72; $('weight').value = data.weight || 700; $('lineHeight').value = data.lineHeight || 1.15;
+        state.writing = data.writing === 'vertical' ? 'vertical' : 'horizontal';
+        data.characters.forEach((item) => { if (item.font) addFontOption(item.font, `${item.font}（追加）`); });
+        state.characters = data.characters.map((item) => ({ ...defaults(), ...item }));
+        syncCharacters();
+        document.querySelectorAll('[data-writing]').forEach((button) => button.classList.toggle('active', button.dataset.writing === state.writing));
+        render();
+      }
+      function applyEditorSettings(editor) {
+        (editor?.fontOptions || []).forEach((option) => { if (option && option.value) addFontOption(option.value, option.label); });
+        if (editor?.webFontUrl) {
+          $('webFontUrl').value = editor.webFontUrl;
+          const parsed = parseWebFontInput(editor.webFontUrl);
+          if (parsed.url && parsed.family) prepareWebFont(parsed.url, parsed.family);
+        }
+      }
+      function renderSnapshots() {
+        const box = $('snapshots');
+        box.replaceChildren();
+        Object.keys(snapshots).forEach((name) => {
+          const item = document.createElement('span');
+          item.className = 'snapshot-item';
+          const select = document.createElement('button');
+          select.textContent = name;
+          select.classList.toggle('active', name === activeSnapshot);
+          select.addEventListener('click', () => {
+            const snapshot = structuredClone(snapshots[name]);
+            activeSnapshot = name;
+            applyEditorSettings(snapshot.editor);
+            applyData(snapshot.settings || snapshot);
+            renderSnapshots();
+            scheduleFolderSave();
+            setStatus(`スナップショット「${name}」を適用しました`, true);
+          });
+          const remove = document.createElement('button');
+          remove.textContent = '×';
+          remove.className = 'snapshot-delete';
+          remove.title = `「${name}」を削除`;
+          remove.setAttribute('aria-label', `スナップショット「${name}」を削除`);
+          remove.addEventListener('click', () => {
+            delete snapshots[name];
+            if (activeSnapshot === name) activeSnapshot = null;
+            renderSnapshots();
+            persistBrowserData();
+            scheduleFolderSave();
+            setStatus(`スナップショット「${name}」を削除しました`, true);
+          });
+          item.append(select, remove);
+          box.appendChild(item);
+        });
+      }
+      $('text').addEventListener('input', () => { syncCharacters(); render(); });
+      $('headingId').addEventListener('input', updateOutput);
+      $('headingId').addEventListener('blur', () => { $('headingId').value = headingId(); updateOutput(); });
+      ['font', 'size', 'weight', 'lineHeight'].forEach((id) => $(id).addEventListener('input', render));
+      $('color').addEventListener('input', () => { $('colorValue').textContent = $('color').value; render(); });
+      document.querySelectorAll('[data-writing]').forEach((button) => button.addEventListener('click', () => { state.writing = button.dataset.writing; document.querySelectorAll('[data-writing]').forEach((b) => b.classList.toggle('active', b === button)); render(); scheduleFolderSave(); }));
+      $('applyKerning').addEventListener('click', () => { applyKerning(); scheduleFolderSave(); });
+      $('restoreCode').addEventListener('click', () => {
+        try { restoreFromCode($('importCode').value); setStatus('書き出しコードから設定を再現しました', true); }
+        catch (error) { setStatus(`コードを読み込めませんでした：${error.message}`, false); }
+      });
+      $('addLocalFont').addEventListener('click', () => { const value = $('fontFamily').value.trim(); if (!value) { $('localFontResult').textContent = 'font-familyを入力してください。'; return; } addFontOption(value, `${value}（追加）`); $('font').value = value; $('localFontResult').textContent = `「${value}」を選択肢に追加しました。`; render(); scheduleFolderSave(); });
+      $('fontFamily').addEventListener('keydown', (event) => { if (event.key === 'Enter') $('addLocalFont').click(); });
+      $('loadWebFont').addEventListener('click', () => { const result = $('webFontResult'); const { url, family } = parseWebFontInput($('webFontUrl').value); if (!url) { result.textContent = 'URLが見つかりませんでした。'; return; } if (!family) { result.textContent = 'family=を含むGoogle FontsのCSS URLを指定してください。'; return; } $('webFontUrl').value = url; $('font').value = prepareWebFont(url, family); result.textContent = `「${family}」を読み込みました。`; render(); scheduleFolderSave(); });
+      $('saveSnapshot').addEventListener('click', () => {
+        const name = $('snapshotName').value.trim() || `設定${Object.keys(snapshots).length + 1}`;
+        snapshots[name] = collectSnapshot();
+        activeSnapshot = name;
+        $('snapshotName').value = '';
+        renderSnapshots();
+        persistBrowserData();
+        scheduleFolderSave();
+        setStatus(`スナップショット「${name}」を保存しました`, true);
+      });
+      $('snapshotName').addEventListener('keydown', (event) => { if (event.key === 'Enter') $('saveSnapshot').click(); });
+      $('save').addEventListener('click', () => { persistBrowserData(); setStatus('ブラウザに保存しました', true); });
+      $('load').addEventListener('click', () => { try { const raw = localStorage.getItem('sweet-type-h-settings'); if (!raw) throw new Error('保存データがありません'); const saved = JSON.parse(raw); if (saved.headingId) $('headingId').value = saved.headingId; if (saved.text != null) $('text').value = saved.text; applyEditorSettings(saved.editor); snapshots = Object.assign(Object.create(null), saved.snapshots && typeof saved.snapshots === 'object' ? saved.snapshots : {}); activeSnapshot = null; applyData(saved.settings || saved); renderSnapshots(); setStatus('保存データを読み込みました', true); } catch (e) { setStatus(`読み込めません：${e.message}`, false); } });
+      $('reset').addEventListener('click', () => { $('headingId').value = 'title'; $('text').value = '文字を、丁寧に。'; state.characters = []; syncCharacters(); render(); scheduleFolderSave(); setStatus('初期化しました', true); });
+      $('copy').addEventListener('click', async (event) => { event.preventDefault(); event.stopPropagation(); try { await navigator.clipboard.writeText($('output').value); setStatus('埋め込みコードをコピーしました', true); } catch (_) { $('output').select(); document.execCommand('copy'); setStatus('埋め込みコードをコピーしました', true); } });
+      $('pickDirectory').addEventListener('click', async () => {
+        try { await connectDirectory(await folderStorage.pick(), true); }
+        catch (error) { if (error.name !== 'AbortError') setStatus(`フォルダを開けませんでした：${error.message}`, false); }
+      });
+      $('reconnect').addEventListener('click', async () => { const handle = await folderStorage.recall(); if (handle) await connectDirectory(handle, true); });
+      $('saveToFolder').addEventListener('click', async () => {
+        if (!directoryHandle) {
+          try { if (!await connectDirectory(await folderStorage.pick(), true)) return; }
+          catch (error) { if (error.name !== 'AbortError') setStatus(`フォルダを開けませんでした：${error.message}`, false); return; }
+        }
+        clearTimeout(folderSaveTimer);
+        try { await saveDeliverables(); }
+        catch (error) { setStatus(`JSを保存できませんでした：${error.message}`, false); }
+      });
+      document.addEventListener('input', (event) => {
+        const target = event.target;
+        const savedIds = new Set(['headingId', 'text', 'font', 'color', 'size', 'weight', 'lineHeight']);
+        if (!savedIds.has(target.id) && !target.dataset.field) return;
+        activeSnapshot = null;
+        renderSnapshots();
+        scheduleFolderSave();
+      });
+      populateFonts(); syncCharacters(); render(); renderSnapshots();
+      if (!FolderStorage.isSupported()) {
+        $('pickDirectory').disabled = true;
+        $('saveToFolder').disabled = true;
+        setStatus('フォルダ保存にはChromeが必要です', false);
+      } else {
+        folderStorage.recall().then(async (handle) => { if (!handle) return; if (!await connectDirectory(handle, false)) $('reconnect').hidden = false; });
+      }
+    })();
+  </script>
+</body>
+</html>
