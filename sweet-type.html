@@ -2385,6 +2385,26 @@
             await refreshTypography();
         });
         $('base-weight').addEventListener('input', refreshTypography);
+        ['base-weight', ...TYPE_SETTINGS.map((type) => 'type-' + type + '-weight')].forEach((id) => {
+            const input = $(id);
+            const inheritedWeight = () => {
+                const base = Number($('base-weight').value);
+                if (id !== 'base-weight' && base > 0) return base;
+                return parseFloat(getComputedStyle(after).fontWeight) || 400;
+            };
+            input.addEventListener('keydown', (event) => {
+                if (Number(input.value) !== 0 || (event.key !== 'ArrowUp' && event.key !== 'ArrowDown')) return;
+                event.preventDefault();
+                const direction = event.key === 'ArrowUp' ? 1 : -1;
+                input.value = String(Math.max(Number(input.min), Math.min(Number(input.max),
+                    inheritedWeight() + direction * Number(input.step))));
+                input.dispatchEvent(new Event('input', { bubbles: true }));
+            });
+            input.addEventListener('pointerdown', (event) => {
+                if (Number(input.value) !== 0 || event.offsetX < input.clientWidth - 18) return;
+                input.value = String(inheritedWeight());
+            });
+        });
 
         function setRightView(view) {
             const showCode = view === 'code';
